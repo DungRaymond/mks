@@ -1,65 +1,265 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import AddStudentModal from '@/components/AddStudentModal'
+import type { StudentSummary } from '@/lib/types'
+
+export default function AdminPage() {
+  const router = useRouter()
+  const [students, setStudents] = useState<StudentSummary[]>([])
+  const [query, setQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadStudents() {
+      try {
+        const response = await fetch('/api/students')
+        const result = await response.json()
+        if (!response.ok) throw new Error(result.error ?? 'Không thể tải danh sách học viên.')
+        if (active) setStudents(result as StudentSummary[])
+      } catch (loadError) {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Đã có lỗi xảy ra.')
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    loadStudents()
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    function closeSearch(event: MouseEvent) {
+      if (!searchRef.current?.contains(event.target as Node)) setSearchOpen(false)
+    }
+    document.addEventListener('mousedown', closeSearch)
+    return () => document.removeEventListener('mousedown', closeSearch)
+  }, [])
+
+  const filteredStudents = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase('vi')
+    if (!normalizedQuery) return students
+    return students.filter((student) =>
+      student.name.toLocaleLowerCase('vi').includes(normalizedQuery),
+    )
+  }, [query, students])
+
+  const collectedTuition = students.reduce(
+    (total, student) => total + (student.paid ? (student.tuition_fee ?? 0) : 0),
+    0,
+  )
+  const totalLessons = students.reduce((total, student) => total + student.attended, 0)
+
+  function openCalendar(id: string) {
+    setSearchOpen(false)
+    router.push(`/students/${id}`)
+  }
+
+  function addStudent(student: StudentSummary) {
+    setStudents((current) => [...current, student].sort((a, b) => a.name.localeCompare(b.name, 'vi')))
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="min-h-screen bg-[#f5f4f0] px-4 py-10 text-[#1a1a19] dark:bg-[#1c1c1a] dark:text-[#e8e6df] sm:px-6">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#534ab7] dark:text-[#aaa5ed]">
+              Quản lý lớp học
+            </p>
+            <h1 className="text-3xl font-medium tracking-tight sm:text-4xl">Học viên &amp; lịch học</h1>
+            <p className="mt-2 text-sm text-[#77766f] dark:text-[#aaa9a2]">
+              Theo dõi buổi học và tình trạng học phí tại một nơi.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#534ab7] px-5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(83,74,183,0.22)] transition hover:bg-[#433b9c]"
+          >
+            <span className="mr-2 text-lg leading-none">+</span> Thêm học viên
+          </button>
+        </header>
+
+        <section className="mb-6 grid gap-3 sm:grid-cols-3" aria-label="Tổng quan">
+          <SummaryCard label="Tổng học viên" value={students.length} />
+          <SummaryCard label="Học phí đã thu" value={formatCurrency(collectedTuition)} accent="green" />
+          <SummaryCard label="Tổng buổi đã học" value={totalLessons} accent="purple" />
+        </section>
+
+        <section className="mb-6 rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#272725] sm:p-5">
+          <label className="mb-2 block text-xs font-semibold text-[#66655f] dark:text-[#b4b2a9]">
+            Chọn học viên để xem lịch
+          </label>
+          <div ref={searchRef} className="relative max-w-xl">
+            <div className="flex h-12 items-center rounded-xl border border-black/15 bg-[#fbfbf9] px-4 transition focus-within:border-[#534ab7] focus-within:ring-2 focus-within:ring-[#534ab7]/10 dark:border-white/15 dark:bg-[#20201e]">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="mr-3 h-5 w-5 fill-none stroke-[#888780]" strokeWidth="1.8">
+                <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
+              </svg>
+              <input
+                value={query}
+                onChange={(event) => { setQuery(event.target.value); setSearchOpen(true) }}
+                onFocus={() => setSearchOpen(true)}
+                placeholder="Tìm theo tên học viên..."
+                className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#aaa9a2]"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  className="ml-2 text-sm text-[#888780] hover:text-[#1a1a19] dark:hover:text-white"
+                  aria-label="Xóa tìm kiếm"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {searchOpen && (
+              <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-64 overflow-y-auto rounded-xl border border-black/10 bg-white p-1.5 shadow-xl dark:border-white/10 dark:bg-[#2c2c2a]">
+                {filteredStudents.length > 0 ? filteredStudents.map((student) => (
+                  <button
+                    key={student.id}
+                    type="button"
+                    onClick={() => openCalendar(student.id)}
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition hover:bg-[#f2f1ec] dark:hover:bg-[#3a3a38]"
+                  >
+                    <span className="text-sm font-medium">{student.name}</span>
+                    <PaymentBadge paid={student.paid} tuitionFee={student.tuition_fee} />
+                  </button>
+                )) : (
+                  <p className="px-3 py-4 text-center text-sm text-[#888780]">
+                    {loading ? 'Đang tải...' : 'Không tìm thấy học viên.'}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm dark:border-white/10 dark:bg-[#272725]">
+          <div className="flex items-center justify-between border-b border-black/8 px-5 py-4 dark:border-white/8">
+            <div>
+              <h2 className="text-lg font-medium">Tình trạng học viên</h2>
+              <p className="mt-1 text-xs text-[#888780]">Nhấn vào một học viên để mở lịch học.</p>
+            </div>
+            <span className="rounded-full bg-[#f1f0eb] px-3 py-1 text-xs text-[#6f6e68] dark:bg-[#363634] dark:text-[#b4b2a9]">
+              {students.length} học viên
+            </span>
+          </div>
+
+          {error && (
+            <div className="m-5 rounded-xl bg-[#fcebeb] px-4 py-3 text-sm text-[#a32d2d] dark:bg-[#4a2929] dark:text-[#ffb4b4]">
+              {error}
+            </div>
+          )}
+
+          {!error && loading ? (
+            <div className="px-5 py-12 text-center text-sm text-[#888780]">Đang tải danh sách...</div>
+          ) : students.length === 0 ? (
+            <div className="px-5 py-14 text-center">
+              <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-[#efedf9] text-xl text-[#534ab7]">+</div>
+              <h3 className="text-sm font-semibold">Chưa có học viên</h3>
+              <p className="mt-1 text-xs text-[#888780]">Thêm học viên đầu tiên để bắt đầu ghi lịch học.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-black/8 dark:divide-white/8">
+              {students.map((student) => {
+                const remaining = Math.max(0, student.lesson_limit - student.attended)
+                return (
+                  <button
+                    key={student.id}
+                    type="button"
+                    onClick={() => openCalendar(student.id)}
+                    className="grid w-full grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 text-left transition hover:bg-[#faf9f6] dark:hover:bg-[#2f2f2d] sm:grid-cols-[minmax(0,1fr)_150px_130px_24px]"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{student.name}</p>
+                      <p className="mt-1 text-xs text-[#888780]">Tham gia {formatDate(student.created_at)}</p>
+                    </div>
+                    <div className="hidden sm:block">
+                      <p className="text-sm font-medium">{student.attended}/{student.lesson_limit} buổi</p>
+                      <p className="mt-1 text-xs text-[#888780]">Còn {remaining} buổi</p>
+                    </div>
+                    <div className="text-right">
+                      <PaymentBadge paid={student.paid} tuitionFee={student.tuition_fee} />
+                    </div>
+                    <span className="hidden text-lg text-[#aaa9a2] sm:block">›</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      </div>
+
+      {modalOpen && (
+        <AddStudentModal
+          onClose={() => setModalOpen(false)}
+          onCreated={addStudent}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+      )}
+    </main>
+  )
+}
+
+function SummaryCard({ label, value, accent = 'neutral' }: {
+  label: string
+  value: number | string
+  accent?: 'neutral' | 'green' | 'purple'
+}) {
+  const colors = {
+    neutral: 'bg-[#f1f0eb] text-[#575650] dark:bg-[#383836] dark:text-[#d5d3ca]',
+    green: 'bg-[#eaf3de] text-[#3b6d11] dark:bg-[#29401d] dark:text-[#b9df91]',
+    purple: 'bg-[#efedf9] text-[#534ab7] dark:bg-[#35304f] dark:text-[#bbb5ff]',
+  }
+
+  return (
+    <article className="flex items-center gap-4 rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#272725]">
+      <div className={`grid min-h-11 min-w-11 place-items-center rounded-xl px-3 font-semibold ${
+        typeof value === 'string' ? 'text-sm' : 'text-lg'
+      } ${colors[accent]}`}>
+        {value}
+      </div>
+      <p className="text-sm text-[#6f6e68] dark:text-[#b4b2a9]">{label}</p>
+    </article>
+  )
+}
+
+function PaymentBadge({ paid, tuitionFee }: { paid: boolean; tuitionFee?: number }) {
+  return (
+    <span className="inline-flex flex-col items-end gap-1">
+      <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+        paid
+          ? 'bg-[#eaf3de] text-[#3b6d11] dark:bg-[#29401d] dark:text-[#b9df91]'
+          : 'bg-[#faeeda] text-[#854f0b] dark:bg-[#4b3820] dark:text-[#f2c47f]'
+      }`}>
+        {paid ? 'Đã đóng tiền' : 'Chưa đóng tiền'}
+      </span>
+      <span className="whitespace-nowrap text-xs font-semibold text-[#5f5e5a] dark:text-[#c4c2b9]">
+        {formatCurrency(tuitionFee ?? 0)}
+      </span>
+    </span>
+  )
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+function formatDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'không rõ ngày'
+  return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
 }
