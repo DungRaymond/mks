@@ -1,14 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import type { StudentCalendarData } from '@/lib/types'
 
-const MONTHS_DATA = [
-  { name: 'Tháng 5/2026', year: 2026, month: 4 },
-  { name: 'Tháng 6/2026', year: 2026, month: 5 },
-]
+const START_YEAR = 2026
+const START_MONTH = 4
 
 const DAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
 
@@ -24,14 +22,35 @@ function dateKey(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+function createMonths(futureMonths: number) {
+  const now = new Date()
+  const startIndex = START_YEAR * 12 + START_MONTH
+  const currentIndex = now.getFullYear() * 12 + now.getMonth()
+  const endIndex = Math.max(startIndex, currentIndex) + futureMonths
+  const formatter = new Intl.DateTimeFormat('vi-VN', { month: 'long', year: 'numeric' })
+
+  return Array.from({ length: endIndex - startIndex + 1 }, (_, offset) => {
+    const index = startIndex + offset
+    const year = Math.floor(index / 12)
+    const month = index % 12
+    return {
+      name: formatter.format(new Date(year, month, 1)),
+      year,
+      month,
+    }
+  })
+}
+
 export default function StudentCalendarPage() {
   const { id } = useParams<{ id: string }>()
   const [data, setData] = useState<StudentCalendarData | null>(null)
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set())
   const [busyDates, setBusyDates] = useState<Set<string>>(new Set())
   const [clearing, setClearing] = useState(false)
+  const [futureMonths, setFutureMonths] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const monthsData = useMemo(() => createMonths(futureMonths), [futureMonths])
 
   useEffect(() => {
     let active = true
@@ -182,8 +201,10 @@ export default function StudentCalendarPage() {
           </div>
         </section>
 
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-2.5">
-          <h2 className="text-xl font-medium tracking-tight">Lịch tháng 5 – 6/2026</h2>
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-2.5">
+          <h2 className="text-xl font-medium tracking-tight">
+            Lịch từ tháng 5/2026 đến {monthsData.at(-1)?.name}
+          </h2>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -199,12 +220,33 @@ export default function StudentCalendarPage() {
           </div>
         </header>
 
+        <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-[#272725]">
+          <div>
+            <p className="text-sm font-medium">Mở rộng lịch</p>
+            <p className="mt-0.5 text-xs text-[#888780]">Mặc định hiển thị đến tháng hiện tại.</p>
+          </div>
+          <label className="flex items-center gap-2 text-xs font-medium text-[#6f6e68] dark:text-[#b4b2a9]">
+            Thêm
+            <select
+              value={futureMonths}
+              onChange={(event) => setFutureMonths(Number(event.target.value))}
+              className="h-9 rounded-lg border border-black/15 bg-[#fbfbf9] px-3 text-sm font-semibold text-[#1a1a19] outline-none transition hover:border-[#534ab7] focus:border-[#534ab7] dark:border-white/15 dark:bg-[#222220] dark:text-[#e8e6df]"
+            >
+              <option value={0}>0 tháng</option>
+              <option value={1}>1 tháng</option>
+              <option value={3}>3 tháng</option>
+              <option value={6}>6 tháng</option>
+              <option value={12}>12 tháng</option>
+            </select>
+          </label>
+        </div>
+
         {error && (
           <p className="mb-4 rounded-xl bg-[#fcebeb] px-4 py-3 text-sm text-[#a32d2d] dark:bg-[#4a2929] dark:text-[#ffb4b4]">{error}</p>
         )}
 
         <div className="flex flex-col gap-6">
-          {MONTHS_DATA.map(({ name, year, month }) => {
+          {monthsData.map(({ name, year, month }) => {
             const firstDay = firstDayOfMonth(year, month)
             const totalDays = daysInMonth(year, month)
 

@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import StudentModal from '@/components/StudentModal'
 import type { StudentSummary } from '@/lib/types'
+
+type Ripple = { x: number; y: number; key: number }
 
 export default function AdminPage() {
   const router = useRouter()
@@ -13,6 +15,7 @@ export default function AdminPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingStudent, setEditingStudent] = useState<StudentSummary | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [ripples, setRipples] = useState<Record<string, Ripple>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const searchRef = useRef<HTMLDivElement>(null)
@@ -92,6 +95,18 @@ export default function AdminPage() {
     }
   }
 
+  function showRipple(event: ReactPointerEvent<HTMLButtonElement>, id: string) {
+    const rect = event.currentTarget.getBoundingClientRect()
+    setRipples((current) => ({
+      ...current,
+      [id]: {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+        key: Date.now(),
+      },
+    }))
+  }
+
   return (
     <main className="min-h-screen bg-[#f5f4f0] px-4 py-10 text-[#1a1a19] dark:bg-[#1c1c1a] dark:text-[#e8e6df] sm:px-6">
       <div className="mx-auto w-full max-w-5xl">
@@ -155,7 +170,7 @@ export default function AdminPage() {
                     key={student.id}
                     type="button"
                     onClick={() => openCalendar(student.id)}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition hover:bg-[#f2f1ec] dark:hover:bg-[#3a3a38]"
+                    className="student-option flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition duration-200 hover:-translate-y-px hover:bg-[#f2f1ec] hover:shadow-sm dark:hover:bg-[#3a3a38]"
                   >
                     <span className="text-sm font-medium">{student.name}</span>
                     <PaymentBadge paid={student.paid} tuitionFee={student.tuition_fee} />
@@ -202,20 +217,32 @@ export default function AdminPage() {
                 return (
                   <div
                     key={student.id}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4 transition hover:bg-[#faf9f6] dark:hover:bg-[#2f2f2d] sm:grid-cols-[minmax(0,1fr)_130px_150px_76px]"
+                    className="relative isolate grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 overflow-hidden px-5 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#faf9f6] hover:shadow-[0_8px_24px_rgba(45,42,35,0.08)] dark:hover:bg-[#2f2f2d] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.22)] sm:grid-cols-[minmax(0,1fr)_130px_150px_76px]"
                   >
-                    <button type="button" onClick={() => openCalendar(student.id)} className="min-w-0 text-left">
-                      <p className="truncate text-sm font-semibold">{student.name}</p>
-                      <p className="mt-1 text-xs text-[#888780]">Tham gia {formatDate(student.created_at)}</p>
+                    <button
+                      type="button"
+                      onPointerDown={(event) => showRipple(event, student.id)}
+                      onClick={() => openCalendar(student.id)}
+                      className="relative z-10 min-w-0 overflow-hidden rounded-lg px-2 py-2 text-left transition-all duration-200 hover:translate-x-0.5 hover:bg-[#f1f0eb] dark:hover:bg-[#383836]"
+                    >
+                      {ripples[student.id] && (
+                        <span
+                          key={ripples[student.id].key}
+                          className="student-ripple"
+                          style={{ left: ripples[student.id].x, top: ripples[student.id].y }}
+                        />
+                      )}
+                      <span className="relative z-10 block truncate text-sm font-semibold">{student.name}</span>
+                      <span className="relative z-10 mt-1 block text-xs text-[#888780]">Tham gia {formatDate(student.created_at)}</span>
                     </button>
-                    <div className="hidden sm:block">
+                    <div className="relative z-10 hidden sm:block">
                       <p className="text-sm font-medium">{student.attended}/{student.lesson_limit} buổi</p>
                       <p className="mt-1 text-xs text-[#888780]">Còn {remaining} buổi</p>
                     </div>
-                    <div className="text-right">
+                    <div className="relative z-10 text-right">
                       <PaymentBadge paid={student.paid} tuitionFee={student.tuition_fee} />
                     </div>
-                    <div className="flex justify-end gap-1">
+                    <div className="relative z-10 flex justify-end gap-1">
                       <button
                         type="button"
                         onClick={() => { setEditingStudent(student); setModalOpen(true) }}
