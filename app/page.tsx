@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import StudentModal from '@/components/StudentModal'
+import LogoutButton from '@/components/LogoutButton'
 import type { StudentSummary } from '@/lib/types'
 
 type Ripple = { x: number; y: number; key: number }
@@ -120,13 +121,16 @@ export default function AdminPage() {
               Theo dõi buổi học và tình trạng học phí tại một nơi.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => { setEditingStudent(null); setModalOpen(true) }}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#534ab7] px-5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(83,74,183,0.22)] transition hover:bg-[#433b9c]"
-          >
-            <span className="mr-2 text-lg leading-none">+</span> Thêm học viên
-          </button>
+          <div className="flex gap-2">
+            <LogoutButton />
+            <button
+              type="button"
+              onClick={() => { setEditingStudent(null); setModalOpen(true) }}
+              className="inline-flex h-11 items-center justify-center rounded-xl bg-[#534ab7] px-5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(83,74,183,0.22)] transition hover:bg-[#433b9c]"
+            >
+              <span className="mr-2 text-lg leading-none">+</span> Thêm học viên
+            </button>
+          </div>
         </header>
 
         <section className="mb-6 grid gap-3 sm:grid-cols-3" aria-label="Tổng quan">
