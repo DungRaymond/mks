@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import AddStudentModal from '@/components/AddStudentModal'
+import StudentModal from '@/components/StudentModal'
 import type { StudentSummary } from '@/lib/types'
 
 export default function AdminPage() {
@@ -11,6 +11,8 @@ export default function AdminPage() {
   const [query, setQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingStudent, setEditingStudent] = useState<StudentSummary | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const searchRef = useRef<HTMLDivElement>(null)
@@ -62,8 +64,32 @@ export default function AdminPage() {
     router.push(`/students/${id}`)
   }
 
-  function addStudent(student: StudentSummary) {
-    setStudents((current) => [...current, student].sort((a, b) => a.name.localeCompare(b.name, 'vi')))
+  function saveStudent(student: StudentSummary) {
+    setStudents((current) => {
+      const exists = current.some((item) => item.id === student.id)
+      const next = exists
+        ? current.map((item) => item.id === student.id ? student : item)
+        : [...current, student]
+      return next.sort((a, b) => a.name.localeCompare(b.name, 'vi'))
+    })
+  }
+
+  async function deleteStudent(student: StudentSummary) {
+    if (!window.confirm(`Xóa học viên ${student.name} và toàn bộ lịch học?`)) return
+    setDeletingId(student.id)
+    setError(null)
+    try {
+      const response = await fetch(`/api/students/${student.id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const result = await response.json().catch(() => null)
+        throw new Error(result?.error ?? 'Không thể xóa học viên.')
+      }
+      setStudents((current) => current.filter((item) => item.id !== student.id))
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Đã có lỗi xảy ra.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   return (
@@ -81,7 +107,7 @@ export default function AdminPage() {
           </div>
           <button
             type="button"
-            onClick={() => setModalOpen(true)}
+            onClick={() => { setEditingStudent(null); setModalOpen(true) }}
             className="inline-flex h-11 items-center justify-center rounded-xl bg-[#534ab7] px-5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(83,74,183,0.22)] transition hover:bg-[#433b9c]"
           >
             <span className="mr-2 text-lg leading-none">+</span> Thêm học viên
@@ -174,16 +200,14 @@ export default function AdminPage() {
               {students.map((student) => {
                 const remaining = Math.max(0, student.lesson_limit - student.attended)
                 return (
-                  <button
+                  <div
                     key={student.id}
-                    type="button"
-                    onClick={() => openCalendar(student.id)}
-                    className="grid w-full grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 text-left transition hover:bg-[#faf9f6] dark:hover:bg-[#2f2f2d] sm:grid-cols-[minmax(0,1fr)_150px_130px_24px]"
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4 transition hover:bg-[#faf9f6] dark:hover:bg-[#2f2f2d] sm:grid-cols-[minmax(0,1fr)_130px_150px_76px]"
                   >
-                    <div className="min-w-0">
+                    <button type="button" onClick={() => openCalendar(student.id)} className="min-w-0 text-left">
                       <p className="truncate text-sm font-semibold">{student.name}</p>
                       <p className="mt-1 text-xs text-[#888780]">Tham gia {formatDate(student.created_at)}</p>
-                    </div>
+                    </button>
                     <div className="hidden sm:block">
                       <p className="text-sm font-medium">{student.attended}/{student.lesson_limit} buổi</p>
                       <p className="mt-1 text-xs text-[#888780]">Còn {remaining} buổi</p>
@@ -191,8 +215,28 @@ export default function AdminPage() {
                     <div className="text-right">
                       <PaymentBadge paid={student.paid} tuitionFee={student.tuition_fee} />
                     </div>
-                    <span className="hidden text-lg text-[#aaa9a2] sm:block">›</span>
-                  </button>
+                    <div className="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => { setEditingStudent(student); setModalOpen(true) }}
+                        className="grid h-8 w-8 place-items-center rounded-lg text-[#77766f] transition hover:bg-[#ebe9f7] hover:text-[#534ab7] dark:text-[#b4b2a9] dark:hover:bg-[#3b3655]"
+                        aria-label={`Sửa ${student.name}`}
+                        title="Sửa"
+                      >
+                        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8"><path d="m4 20 4.2-1 10.6-10.6a2.1 2.1 0 0 0-3-3L5.2 16 4 20Z" /><path d="m14.5 6.5 3 3" /></svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteStudent(student)}
+                        disabled={deletingId === student.id}
+                        className="grid h-8 w-8 place-items-center rounded-lg text-[#888780] transition hover:bg-[#fcebeb] hover:text-[#a32d2d] disabled:opacity-40 dark:hover:bg-[#4a2929] dark:hover:text-[#ffb4b4]"
+                        aria-label={`Xóa ${student.name}`}
+                        title="Xóa"
+                      >
+                        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5" /></svg>
+                      </button>
+                    </div>
+                  </div>
                 )
               })}
             </div>
@@ -201,9 +245,10 @@ export default function AdminPage() {
       </div>
 
       {modalOpen && (
-        <AddStudentModal
-          onClose={() => setModalOpen(false)}
-          onCreated={addStudent}
+        <StudentModal
+          student={editingStudent}
+          onClose={() => { setModalOpen(false); setEditingStudent(null) }}
+          onSaved={saveStudent}
         />
       )}
     </main>
