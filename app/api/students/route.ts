@@ -1,11 +1,16 @@
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { withSupabaseClockSkewRetry } from '@/lib/supabase-retry'
 import type { Attendance, Student, StudentSummary } from '@/lib/types'
 
 export async function GET() {
   const [{ data: students, error: studentError }, { data: attendance, error: attendanceError }] =
     await Promise.all([
-      supabaseAdmin.from('students').select('*').order('name'),
-      supabaseAdmin.from('attendance').select('student_id'),
+      withSupabaseClockSkewRetry(() =>
+        supabaseAdmin.from('students').select('*').order('name'),
+      ),
+      withSupabaseClockSkewRetry(() =>
+        supabaseAdmin.from('attendance').select('student_id'),
+      ),
     ])
 
   if (studentError || attendanceError) {
