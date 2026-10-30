@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { getSession } from '@/lib/session'
 import { createPublicClient } from '@/lib/supabase/public'
 
 type Item = {
@@ -60,7 +61,7 @@ export async function generateMetadata({
 
 export default async function ItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const item = await getItem(id)
+  const [item, session] = await Promise.all([getItem(id), getSession()])
   if (!item) notFound()
 
   const urgent = item.type === 'notice' && item.priority === 'urgent'
@@ -68,7 +69,10 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   return (
     <main className="min-h-screen bg-linen px-5 py-10 text-ink sm:px-8 sm:py-16">
       <article className="mx-auto max-w-3xl">
-        <Link href="/" className="text-sm text-ink/60 hover:text-ink">← Về trang lớp</Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/" className="text-sm text-ink/60 hover:text-ink">← Về trang lớp</Link>
+          {session && <Link href="/admin/new" className="text-sm font-medium text-rose hover:underline">Tạo task</Link>}
+        </div>
         <div className={`mt-8 rounded-3xl border p-6 shadow-sm sm:p-10 ${urgent ? 'border-rose/45 bg-rose/10' : 'border-oak/30 bg-white/65'}`}>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-full bg-beige px-3 py-1">{typeLabels[item.type]}</span>

@@ -1,5 +1,8 @@
 import { createPublicClient } from '@/lib/supabase/public'
 import Link from 'next/link'
+import { getSession } from '@/lib/session'
+import QuickTaskForm from './QuickTaskForm'
+import Image from 'next/image'
 
 type Item = {
   id: string
@@ -15,7 +18,7 @@ type Item = {
 const priorityLabel = { urgent: 'Khẩn cấp', high: 'Ưu tiên cao', normal: 'Bình thường' }
 const typeLabel = { task: 'Task lớp', homework: 'Bài tập', notice: 'Chú ý' }
 const subjectColors: Record<string, string> = {
-  'Lý - dược': 'border-sky-300 bg-sky-50 text-sky-950',
+  'Lý - dược': 'border-violet-300 bg-violet-50 text-violet-950',
   'Toán': 'border-violet-300 bg-violet-50 text-violet-950',
   'Hóa': 'border-emerald-300 bg-emerald-50 text-emerald-950',
   'Sinh': 'border-lime-300 bg-lime-50 text-lime-950',
@@ -23,7 +26,8 @@ const subjectColors: Record<string, string> = {
 
 export default async function Home() {
   const supabase = createPublicClient()
-  const [{ data: dueData, error: dueError }, { data: recentData, error: recentError }] = await Promise.all([
+  const [session, { data: dueData, error: dueError }, { data: recentData, error: recentError }] = await Promise.all([
+    getSession(),
     supabase
       .from('class_items')
       .select('id, type, title, description, subject, priority, due_at, updated_at')
@@ -48,13 +52,14 @@ export default async function Home() {
     <main className="min-h-screen bg-linen px-5 py-12 text-ink sm:px-8 sm:py-16">
       <div className="mx-auto max-w-5xl">
         <header className="mb-12 border-b border-oak/30 pb-8 sm:mb-14">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-rose">Class Hub</p>
+          <Link href="/" className="mb-4 inline-flex" aria-label="K20 Dược - Trang chủ">
+            <Image src="/k20-duoc.svg" alt="K20 Dược" width={200} height={60} priority />
+          </Link>
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
-              <h1 className="font-serif text-4xl font-medium tracking-tight sm:text-6xl">Lớp mình, chung một nhịp.</h1>
-              <p className="mt-4 max-w-xl text-base leading-7 text-ink/65">Task, bài tập và thông báo mới nhất của lớp.</p>
+              <h1 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">Task, bài tập và thông báo mới nhất.</h1>
             </div>
-            <Link href="/login" className="w-fit rounded-full border border-oak/50 px-5 py-2.5 text-sm font-medium transition hover:bg-beige/60">Cán bộ đăng nhập</Link>
+            <Link href={session ? '/admin/new' : '/login'} className="w-fit rounded-full border border-oak/50 px-5 py-2.5 text-sm font-medium transition hover:bg-beige/60">{session ? 'Tạo task' : 'Cán bộ đăng nhập'}</Link>
           </div>
         </header>
 
@@ -62,6 +67,7 @@ export default async function Home() {
           <p role="status" className="rounded-2xl border border-rose/30 bg-rose/10 p-5 text-sm">Chưa tải được dữ liệu lớp. Vui lòng thử tải lại.</p>
         ) : (
           <div className="space-y-14">
+            {session && <QuickTaskForm />}
             <section aria-labelledby="due-title">
               <SectionHeading id="due-title" eyebrow="Cần chú ý" title="Ưu tiên, sắp đến hạn" />
               {dueSoon.length ? <div className="grid gap-4 md:grid-cols-2">{dueSoon.map((item) => <ItemCard key={item.id} item={item} />)}</div> : <EmptyState text="Chưa có task hoặc bài tập sắp đến hạn." />}
