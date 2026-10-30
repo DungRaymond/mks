@@ -6,6 +6,7 @@ import { getSession } from '@/lib/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 function validateTask(formData: FormData) {
+  const type = String(formData.get('type') ?? 'task')
   const title = String(formData.get('title') ?? '').trim()
   const subject = String(formData.get('subject') ?? '').trim()
   const description = String(formData.get('description') ?? '').trim()
@@ -13,6 +14,7 @@ function validateTask(formData: FormData) {
   const dueAt = String(formData.get('due_at') ?? '').trim()
   const published = formData.get('is_published') !== 'off'
 
+  if (!['task', 'homework'].includes(type)) return { error: 'fields' as const }
   if (!title || title.length > 240) return { error: 'title' as const }
   if (subject.length > 120 || !['normal', 'high', 'urgent'].includes(priority)) {
     return { error: 'fields' as const }
@@ -21,7 +23,7 @@ function validateTask(formData: FormData) {
 
   return {
     value: {
-      type: 'task',
+      type,
       title,
       description: description || null,
       subject: subject || null,

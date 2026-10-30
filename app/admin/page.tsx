@@ -53,7 +53,7 @@ export default async function AdminPage() {
               {items.map((item) => <Link key={item.id} href={`/items/${item.id}`} className="flex flex-col justify-between gap-3 py-4 transition-colors hover:text-rose focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose sm:flex-row sm:items-center">
                 <div className="min-w-0">
                   <h3 className="font-medium">{item.title}</h3>
-                  <p className="mt-1 text-xs text-ink/55">{item.subject ?? 'Chưa phân môn'} · {item.type === 'task' ? (item.is_done ? 'Hoàn thành' : 'Chưa hoàn thành') : item.type}</p>
+                  <p className="mt-1 text-xs text-ink/55">{item.subject ?? 'Chưa phân môn'} · {item.type === 'task' ? `Task · ${item.is_done ? 'Hoàn thành' : 'Chưa hoàn thành'}` : item.type === 'homework' ? 'Bài tập về nhà' : 'Thông báo'}</p>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-ink/55">
                   <span>{item.is_published ? 'Công khai' : 'Bản nháp'}</span>
