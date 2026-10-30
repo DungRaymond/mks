@@ -14,8 +14,8 @@ Landing page công khai cho cả lớp xem; cán bộ lớp đăng nhập để 
 | Role | Quyền |
 |---|---|
 | Public (không đăng nhập) | Xem các mục `published` |
-| `officer` | Tạo / sửa / xóa mục của lớp, ghim, upload ảnh, xem lịch sử, khôi phục phiên bản cũ |
-| `admin` (lớp trưởng/GVCN) | Toàn quyền officer + cấp/thu hồi role officer |
+| `officer` | Tạo / sửa mục của lớp, ghim, upload ảnh, xem lịch sử, khôi phục phiên bản cũ |
+| `admin` (lớp trưởng/GVCN) | Toàn quyền officer + xóa mục + cấp/thu hồi role officer |
 
 ## 4. Database (Supabase SQL)
 
@@ -85,7 +85,7 @@ $$;
 create policy "public read published" on class_items for select using (is_published or is_officer());
 create policy "officer insert" on class_items for insert with check (is_officer());
 create policy "officer update" on class_items for update using (is_officer());
-create policy "officer delete" on class_items for delete using (is_officer());
+create policy "admin delete" on class_items for delete using (is_admin());
 
 -- item_images (cùng quy tắc)
 create policy "public read images" on item_images for select using (true);
@@ -226,7 +226,7 @@ end $$;
 - Fields: type, title, description (textarea, hỗ trợ xuống dòng), subject, priority, due_at, is_pinned, is_published
 - Upload nhiều ảnh (tối đa 5/item), preview trước khi lưu
 - Validate bằng zod + react-hook-form
-- Nút: Lưu, Lưu nháp (`is_published=false`), Xóa (confirm dialog), Đánh dấu hoàn thành
+- Nút: Lưu, Lưu nháp (`is_published=false`), Đánh dấu hoàn thành; chỉ admin có nút Xóa (confirm dialog)
 - Task/homework mới mặc định hạn = thời điểm tạo + 7 ngày; người tạo có thể chọn hạn khác
 
 ### Lịch sử thay đổi (UI)
