@@ -1,74 +1,41 @@
-'use client'
+import { signIn } from './actions'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/session'
 
-import { useState, type FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
+const errors: Record<string, string> = {
+  credentials: 'Tên đăng nhập hoặc mật khẩu không đúng.',
+}
 
-export default function LoginPage() {
-  const router = useRouter()
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function login(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      })
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error ?? 'Không thể đăng nhập.')
-
-      const nextPath = new URLSearchParams(window.location.search).get('next')
-      router.replace(nextPath?.startsWith('/') ? nextPath : '/')
-      router.refresh()
-    } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : 'Đã có lỗi xảy ra.')
-    } finally {
-      setLoading(false)
-    }
-  }
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; next?: string }>
+}) {
+  const params = await searchParams
+  if (await getSession()) redirect(params.next?.startsWith('/admin') ? params.next : '/admin')
 
   return (
-    <main className="relative grid min-h-screen place-items-center overflow-hidden bg-[#f5f4f0] px-4 py-10 text-[#1a1a19] dark:bg-[#1c1c1a] dark:text-[#e8e6df]">
-      <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[#534ab7]/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-[#8a82dd]/10 blur-3xl" />
-
-      <section className="relative w-full max-w-sm rounded-3xl border border-black/10 bg-white p-7 shadow-[0_24px_80px_rgba(40,36,28,0.12)] dark:border-white/10 dark:bg-[#272725] dark:shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-        <div className="mb-7 grid h-12 w-12 place-items-center rounded-2xl bg-[#534ab7] text-xl font-semibold text-white shadow-[0_8px_24px_rgba(83,74,183,0.3)]">
-          L
-        </div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#534ab7] dark:text-[#aaa5ed]">Khu vực giáo viên</p>
-        <h1 className="mt-2 text-2xl font-medium tracking-tight">Đăng nhập quản lý lớp</h1>
-        <p className="mt-2 text-sm leading-6 text-[#77766f] dark:text-[#aaa9a2]">Nhập mật khẩu giáo viên để tiếp tục.</p>
-
-        <form onSubmit={login} className="mt-7">
-          <label className="block text-xs font-semibold text-[#5f5e5a] dark:text-[#c4c2b9]">
-            Mật khẩu
-            <input
-              autoFocus
-              required
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              placeholder="Nhập mật khẩu"
-              className="mt-2 h-12 w-full rounded-xl border border-black/15 bg-[#fbfbf9] px-4 text-sm font-normal outline-none transition focus:border-[#534ab7] focus:ring-4 focus:ring-[#534ab7]/10 dark:border-white/15 dark:bg-[#20201e]"
-            />
+    <main className="grid min-h-screen place-items-center bg-linen px-5 py-12 text-ink">
+      <section className="w-full max-w-md rounded-3xl border border-oak/30 bg-white/70 p-7 shadow-sm sm:p-9">
+        <Link href="/" className="text-sm font-medium uppercase tracking-[0.2em] text-rose">Class Hub</Link>
+        <h1 className="mt-5 font-serif text-3xl">Đăng nhập cán bộ</h1>
+        <p className="mt-2 text-sm leading-6 text-ink/65">Dùng tài khoản được cấp bởi quản trị viên lớp.</p>
+        {params.error && errors[params.error] && (
+          <p role="alert" className="mt-5 rounded-xl bg-rose/10 px-4 py-3 text-sm text-rose">{errors[params.error]}</p>
+        )}
+        <form action={signIn} className="mt-7 space-y-4">
+          <input type="hidden" name="next" value={params.next ?? '/admin'} />
+          <label className="block text-sm font-medium">
+            Tên đăng nhập
+            <input required type="text" name="username" autoComplete="username" minLength={3} maxLength={32} pattern="[a-zA-Z0-9_]{3,32}" className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-4 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20" />
           </label>
-
-          {error && <p className="mt-3 rounded-xl bg-[#fcebeb] px-3 py-2.5 text-xs text-[#a32d2d] dark:bg-[#4a2929] dark:text-[#ffb4b4]">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-5 h-12 w-full rounded-xl bg-[#534ab7] text-sm font-semibold text-white shadow-[0_8px_24px_rgba(83,74,183,0.22)] transition hover:-translate-y-0.5 hover:bg-[#433b9c] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          <label className="block text-sm font-medium">
+            Mật khẩu
+            <input required type="password" name="password" autoComplete="current-password" className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-4 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20" />
+          </label>
+          <button className="h-12 w-full rounded-xl bg-ink px-4 font-medium text-linen transition hover:bg-ink/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose">
+            Đăng nhập
           </button>
         </form>
       </section>
