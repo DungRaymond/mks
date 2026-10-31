@@ -30,7 +30,7 @@ const subjectColors: Record<string, string> = {
 export default async function Home() {
   const supabase = createPublicClient()
   const now = new Date().toISOString()
-  const [session, { data: dueData, error: dueError }, { data: overdueData, error: overdueError }, { data: recentData, error: recentError }] = await Promise.all([
+  const [session, { data: dueData, error: dueError }, { data: overdueData, error: overdueError }, { data: noticeData, error: noticeError }, { data: recentData, error: recentError }] = await Promise.all([
     getSession(),
     supabase
       .from('class_items')
@@ -50,6 +50,13 @@ export default async function Home() {
       .lt('due_at', now)
       .order('due_at', { ascending: false })
       .limit(5),
+    supabase
+      .from('class_items')
+      .select('id, type, title, description, subject, priority, due_at, updated_at')
+      .eq('is_published', true)
+      .eq('type', 'notice')
+      .order('updated_at', { ascending: false })
+      .limit(8),
     supabase
       .from('class_items')
       .select('id, type, title, description, subject, priority, due_at, updated_at')
@@ -76,7 +83,7 @@ export default async function Home() {
           </div>
         </header>
 
-        {dueError || overdueError || recentError ? (
+        {dueError || overdueError || noticeError || recentError ? (
           <p role="status" className="rounded-2xl border border-rose/30 bg-rose/10 p-5 text-sm">Chưa tải được dữ liệu lớp. Vui lòng thử tải lại.</p>
         ) : (
           <div className="space-y-14">
@@ -84,6 +91,10 @@ export default async function Home() {
             <section aria-labelledby="due-title">
               <SectionHeading id="due-title" eyebrow="Cần chú ý" title="Ưu tiên" />
               {dueSoon.length ? <div className="grid gap-4 md:grid-cols-2">{dueSoon.map((item) => <ItemCard key={item.id} item={item} now={now} />)}</div> : <EmptyState text="Chưa có task hoặc bài tập sắp đến hạn." />}
+            </section>
+            <section aria-labelledby="notice-title">
+              <SectionHeading id="notice-title" eyebrow="Thông tin lớp" title="Thông báo" />
+              {noticeData?.length ? <div className="grid gap-4 md:grid-cols-2">{noticeData.map((item) => <ItemCard key={item.id} item={item as Item} now={now} />)}</div> : <EmptyState text="Chưa có thông báo nào." />}
             </section>
             <section aria-labelledby="overdue-title">
               <SectionHeading id="overdue-title" eyebrow="Cần xử lý" title="Đã hết hạn" />
