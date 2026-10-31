@@ -17,25 +17,38 @@ type Item = {
 
 const priorityLabel = { urgent: 'Khẩn cấp', high: 'Ưu tiên cao', normal: 'Bình thường' }
 const typeLabel = { task: 'Task lớp', homework: 'Bài tập', notice: 'Chú ý' }
+const typeChip = 'border border-oak/30 bg-white/70 text-ink/75'
 const subjectColors: Record<string, string> = {
-  'Lý - dược': 'border-violet-300 bg-violet-50 text-violet-950',
-  'Toán': 'border-violet-300 bg-violet-50 text-violet-950',
-  'Hóa': 'border-emerald-300 bg-emerald-50 text-emerald-950',
-  'Sinh': 'border-lime-300 bg-lime-50 text-lime-950',
+  'Lý - dược': 'border-blue-500 bg-blue-100 text-blue-950',
+  'Toán': 'border-blue-500 bg-blue-100 text-blue-950',
+  'Hóa': 'border-yellow-500 bg-yellow-100 text-yellow-950',
+  'Hoá vô cơ - dược': 'border-yellow-500 bg-yellow-100 text-yellow-950',
+  'Y sinh': 'border-cyan-500 bg-cyan-100 text-cyan-950',
+  'Sinh': 'border-cyan-500 bg-cyan-100 text-cyan-950',
 }
 
 export default async function Home() {
   const supabase = createPublicClient()
-  const [session, { data: dueData, error: dueError }, { data: recentData, error: recentError }] = await Promise.all([
+  const now = new Date().toISOString()
+  const [session, { data: dueData, error: dueError }, { data: overdueData, error: overdueError }, { data: recentData, error: recentError }] = await Promise.all([
     getSession(),
     supabase
       .from('class_items')
       .select('id, type, title, description, subject, priority, due_at, updated_at')
       .eq('is_published', true)
       .in('type', ['task', 'homework'])
-      .gte('due_at', new Date().toISOString())
+      .gte('due_at', now)
       .order('priority', { ascending: false })
       .order('due_at', { ascending: true })
+      .limit(5),
+    supabase
+      .from('class_items')
+      .select('id, type, title, description, subject, priority, due_at, updated_at')
+      .eq('is_published', true)
+      .eq('is_done', false)
+      .in('type', ['task', 'homework'])
+      .lt('due_at', now)
+      .order('due_at', { ascending: false })
       .limit(5),
     supabase
       .from('class_items')
@@ -63,14 +76,18 @@ export default async function Home() {
           </div>
         </header>
 
-        {dueError || recentError ? (
+        {dueError || overdueError || recentError ? (
           <p role="status" className="rounded-2xl border border-rose/30 bg-rose/10 p-5 text-sm">Chưa tải được dữ liệu lớp. Vui lòng thử tải lại.</p>
         ) : (
           <div className="space-y-14">
             {session && <QuickTaskForm />}
             <section aria-labelledby="due-title">
-              <SectionHeading id="due-title" eyebrow="Cần chú ý" title="Ưu tiên, sắp đến hạn" />
-              {dueSoon.length ? <div className="grid gap-4 md:grid-cols-2">{dueSoon.map((item) => <ItemCard key={item.id} item={item} />)}</div> : <EmptyState text="Chưa có task hoặc bài tập sắp đến hạn." />}
+              <SectionHeading id="due-title" eyebrow="Cần chú ý" title="Ưu tiên" />
+              {dueSoon.length ? <div className="grid gap-4 md:grid-cols-2">{dueSoon.map((item) => <ItemCard key={item.id} item={item} now={now} />)}</div> : <EmptyState text="Chưa có task hoặc bài tập sắp đến hạn." />}
+            </section>
+            <section aria-labelledby="overdue-title">
+              <SectionHeading id="overdue-title" eyebrow="Cần xử lý" title="Đã hết hạn" />
+              {overdueData?.length ? <div className="grid gap-4 md:grid-cols-2">{overdueData.map((item) => <ItemCard key={item.id} item={item as Item} now={now} />)}</div> : <EmptyState text="Không có task hoặc bài tập nào hết hạn." />}
             </section>
             <section aria-labelledby="recent-title">
               <SectionHeading id="recent-title" eyebrow="Mới cập nhật" title="Tin mới của lớp" />
@@ -88,19 +105,21 @@ function SectionHeading({ id, eyebrow, title }: { id: string; eyebrow: string; t
   return <div className="mb-5"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose">{eyebrow}</p><h2 id={id} className="mt-1 font-serif text-3xl">{title}</h2></div>
 }
 
-function ItemCard({ item }: { item: Item }) {
+function ItemCard({ item, now }: { item: Item; now: string }) {
   const urgentNotice = item.type === 'notice' && item.priority === 'urgent'
+  const overdue = item.due_at !== null && Date.parse(item.due_at) < Date.parse(now)
   const subjectColor = item.subject ? subjectColors[item.subject] : undefined
-  return <Link href={`/items/${item.id}`} className={`block rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${urgentNotice ? 'border-rose/50 bg-rose/10' : subjectColor ?? 'border-oak/30 bg-white/65'}`}>
+  return <Link href={`/items/${item.id}`} className={`block rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${overdue ? 'border-red-600 bg-black text-white' : urgentNotice ? 'border-rose/50 bg-rose/10' : subjectColor ?? 'border-oak/30 bg-white/65'}`}>
     <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
-      <span className="rounded-full bg-beige px-3 py-1 text-ink/75">{typeLabel[item.type]}</span>
+      <span className={`rounded-full px-3 py-1 ${overdue ? 'border border-white/30 bg-white/10 text-white' : item.type === 'homework' ? 'border border-orange-800 bg-orange-700 text-white' : typeChip}`}>{typeLabel[item.type]}</span>
+      {overdue && <span className="rounded-full border border-red-500 bg-red-600 px-3 py-1 font-semibold text-white">ĐÃ HẾT HẠN</span>}
       {urgentNotice && <span className="rounded-full bg-rose px-3 py-1 font-semibold text-white">CẦN CHÚ Ý</span>}
       {!urgentNotice && item.priority !== 'normal' && <span className="rounded-full bg-oak/15 px-3 py-1 text-ink/70">{priorityLabel[item.priority]}</span>}
     </div>
     <h3 className="text-lg font-semibold leading-snug">{item.title}</h3>
-    {item.description && <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-ink/65">{item.description}</p>}
-    <div className="mt-5 flex flex-wrap justify-between gap-2 border-t border-oak/20 pt-4 text-xs text-ink/60">
-      <span>{item.subject ?? 'Cả lớp'}</span>
+    {item.description && <p className={`mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 ${overdue ? 'text-white/75' : 'text-ink/65'}`}>{item.description}</p>}
+    <div className={`mt-5 flex flex-wrap justify-between gap-2 border-t pt-4 text-xs ${overdue ? 'border-red-500 text-white/80' : 'border-oak/20 text-ink/60'}`}>
+      <span className={`rounded-full border px-3 py-1 ${overdue ? 'border-red-500 bg-black text-white' : subjectColors[item.subject ?? ''] ?? 'border-oak/30 bg-white/70'}`}>{item.subject ?? 'Cả lớp'}</span>
       <time dateTime={item.due_at!}>Hạn: {formatDate(item.due_at!)}</time>
     </div>
   </Link>
@@ -118,5 +137,5 @@ function EmptyState({ text }: { text: string }) {
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat('vi-VN', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+  return new Intl.DateTimeFormat('vi-VN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(value))
 }

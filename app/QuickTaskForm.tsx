@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from 'react'
 import Link from 'next/link'
 import { createTaskQuick } from '@/app/admin/new/actions'
+import ImageUploader from '@/app/admin/new/ImageUploader'
 
 export default function QuickTaskForm() {
   const [state, action, pending] = useActionState(createTaskQuick, null)
@@ -38,6 +39,10 @@ export default function QuickTaskForm() {
           Mô tả
           <textarea name="description" rows={3} className="mt-1.5 w-full rounded-xl border border-oak/40 bg-linen p-3 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20" />
         </label>
+        <fieldset className="space-y-2 text-sm font-medium sm:col-span-2">
+          <legend>Ảnh đính kèm</legend>
+          <ImageUploader />
+        </fieldset>
         <input type="hidden" name="priority" value="normal" />
         <input type="hidden" name="is_published" value="on" />
         {state?.error && <p role="alert" className="text-sm text-rose sm:col-span-2">Không lưu được task. Kiểm tra dữ liệu hoặc thử lại.</p>}

@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createTask } from './actions'
+import ImageUploader from './ImageUploader'
 import { getSession } from '@/lib/session'
 
 const errors: Record<string, string> = {
   title: 'Nhập tiêu đề, tối đa 240 ký tự.',
   fields: 'Chọn loại nội dung, môn học hoặc mức ưu tiên hợp lệ.',
   due: 'Hạn hoàn thành không hợp lệ.',
+  images: 'Danh sách ảnh không hợp lệ. Tải lại ảnh rồi thử lại.',
   save: 'Không lưu được task. Kiểm tra migration RPC trên Supabase.',
 }
 
@@ -53,6 +55,11 @@ export default async function NewTaskPage({
             Mô tả
             <textarea name="description" rows={6} className="mt-2 w-full rounded-xl border border-oak/40 bg-linen/60 p-4 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20" />
           </label>
+
+          <fieldset className="space-y-2 text-sm font-medium">
+            <legend>Ảnh đính kèm</legend>
+            <ImageUploader />
+          </fieldset>
 
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="block text-sm font-medium">

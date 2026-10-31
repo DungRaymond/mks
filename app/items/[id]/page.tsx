@@ -17,6 +17,14 @@ type Item = {
 }
 
 const typeLabels = { task: 'Task lớp', homework: 'Bài tập', notice: 'Thông báo' }
+const subjectColors: Record<string, string> = {
+  'Lý - dược': 'border-blue-500 bg-blue-100 text-blue-950',
+  Toán: 'border-blue-500 bg-blue-100 text-blue-950',
+  Hóa: 'border-yellow-500 bg-yellow-100 text-yellow-950',
+  'Hoá vô cơ - dược': 'border-yellow-500 bg-yellow-100 text-yellow-950',
+  'Y sinh': 'border-cyan-500 bg-cyan-100 text-cyan-950',
+  Sinh: 'border-cyan-500 bg-cyan-100 text-cyan-950',
+}
 
 async function getItem(id: string) {
   const { data } = await createPublicClient()
@@ -71,12 +79,12 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
       <article className="mx-auto max-w-3xl">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="text-sm text-ink/60 hover:text-ink">← Về trang lớp</Link>
-          {session && <Link href="/admin/new" className="text-sm font-medium text-rose hover:underline">Tạo task</Link>}
+          {session && <div className="flex gap-2"><Link href="/admin/new" className="inline-flex min-h-11 items-center rounded-xl border border-oak/40 bg-white/70 px-4 text-sm font-medium text-ink shadow-sm transition hover:border-rose hover:bg-rose/5">Tạo task</Link>{['admin', 'officer'].includes(session.profile.role) && item.type !== 'notice' && <Link href={`/items/${id}/edit`} className="inline-flex min-h-11 items-center rounded-xl border border-oak/40 bg-white/70 px-4 text-sm font-medium text-ink shadow-sm transition hover:border-rose hover:bg-rose/5">Sửa</Link>}</div>}
         </div>
         <div className={`mt-8 rounded-3xl border p-6 shadow-sm sm:p-10 ${urgent ? 'border-rose/45 bg-rose/10' : 'border-oak/30 bg-white/65'}`}>
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-full bg-beige px-3 py-1">{typeLabels[item.type]}</span>
-            {item.subject && <span className="rounded-full bg-oak/15 px-3 py-1">{item.subject}</span>}
+            <span className={`rounded-full px-3 py-1 ${item.type === 'homework' ? 'border border-orange-800 bg-orange-700 text-white' : 'border border-oak/30 bg-white/70 text-ink/75'}`}>{typeLabels[item.type]}</span>
+            {item.subject && <span className={`rounded-full border px-3 py-1 ${subjectColors[item.subject] ?? 'border-oak/30 bg-white/70 text-ink'}`}>{item.subject}</span>}
             {urgent && <span className="rounded-full bg-rose px-3 py-1 font-semibold text-white">CẦN CHÚ Ý ĐẶC BIỆT</span>}
           </div>
           <h1 className="mt-6 font-serif text-3xl font-medium leading-tight sm:text-5xl">{item.title}</h1>
