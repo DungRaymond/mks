@@ -109,17 +109,18 @@ function ItemCard({ item, now }: { item: Item; now: string }) {
   const urgentNotice = item.type === 'notice' && item.priority === 'urgent'
   const overdue = item.due_at !== null && Date.parse(item.due_at) < Date.parse(now)
   const subjectColor = item.subject ? subjectColors[item.subject] : undefined
-  return <Link href={`/items/${item.id}`} className={`block rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${overdue ? 'border-red-600 bg-black text-white' : urgentNotice ? 'border-rose/50 bg-rose/10' : subjectColor ?? 'border-oak/30 bg-white/65'}`}>
+  return <Link href={`/items/${item.id}`} className={`block rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${overdue ? 'border-red-600 bg-gray-400 text-gray-800' : urgentNotice ? 'border-rose/50 bg-rose/10' : subjectColor ?? 'border-oak/30 bg-white/65'}`}>
     <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
-      <span className={`rounded-full px-3 py-1 ${overdue ? 'border border-white/30 bg-white/10 text-white' : item.type === 'homework' ? 'border border-orange-800 bg-orange-700 text-white' : typeChip}`}>{typeLabel[item.type]}</span>
-      {overdue && <span className="rounded-full border border-red-500 bg-red-600 px-3 py-1 font-semibold text-white">ĐÃ HẾT HẠN</span>}
+      <span className={`rounded-full px-3 py-1 font-bold ${overdue ? 'border border-gray-500 bg-gray-400 text-gray-800' : item.type === 'homework' ? 'border border-orange-800 bg-orange-700 text-white' : typeChip}`}>{typeLabel[item.type]}</span>
+      {overdue && <span className="rounded-full border border-red-600 bg-red-100 px-3 py-1 font-bold text-red-800">ĐÃ HẾT HẠN</span>}
+      {item.due_at && <span className={`rounded-full border px-3 py-1 font-bold ${overdue ? 'border-red-900 bg-red-700 text-white' : 'border-purple-900 bg-pink-300 text-purple-950'}`}>{formatTimeLeft(Date.parse(item.due_at) - Date.parse(now), overdue)}</span>}
       {urgentNotice && <span className="rounded-full bg-rose px-3 py-1 font-semibold text-white">CẦN CHÚ Ý</span>}
-      {!urgentNotice && item.priority !== 'normal' && <span className="rounded-full bg-oak/15 px-3 py-1 text-ink/70">{priorityLabel[item.priority]}</span>}
+      {!urgentNotice && item.priority !== 'normal' && <span className="rounded-full bg-oak/15 px-3 py-1 font-bold text-ink/70">{priorityLabel[item.priority]}</span>}
     </div>
     <h3 className="text-lg font-semibold leading-snug">{item.title}</h3>
-    {item.description && <p className={`mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 ${overdue ? 'text-white/75' : 'text-ink/65'}`}>{item.description}</p>}
-    <div className={`mt-5 flex flex-wrap justify-between gap-2 border-t pt-4 text-xs ${overdue ? 'border-red-500 text-white/80' : 'border-oak/20 text-ink/60'}`}>
-      <span className={`rounded-full border px-3 py-1 ${overdue ? 'border-red-500 bg-black text-white' : subjectColors[item.subject ?? ''] ?? 'border-oak/30 bg-white/70'}`}>{item.subject ?? 'Cả lớp'}</span>
+    {item.description && <p className={`mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 ${overdue ? 'text-gray-600' : 'text-ink/65'}`}>{item.description}</p>}
+    <div className={`mt-5 flex flex-wrap justify-between gap-2 border-t pt-4 text-xs ${overdue ? 'border-gray-500 text-gray-700' : 'border-oak/20 text-ink/60'}`}>
+      <span className={`rounded-full border px-3 py-1 font-bold ${overdue ? 'border-gray-500 bg-gray-400 text-gray-800' : subjectColors[item.subject ?? ''] ?? 'border-oak/30 bg-white/70'}`}>{item.subject ?? 'Cả lớp'}</span>
       <time dateTime={item.due_at!}>Hạn: {formatDate(item.due_at!)}</time>
     </div>
   </Link>
@@ -138,4 +139,13 @@ function EmptyState({ text }: { text: string }) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('vi-VN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(value))
+}
+
+function formatTimeLeft(milliseconds: number, overdue: boolean) {
+  const totalMinutes = Math.floor(Math.abs(milliseconds) / 60_000)
+  const days = Math.floor(totalMinutes / 1440)
+  const hours = Math.floor((totalMinutes % 1440) / 60)
+  const minutes = totalMinutes % 60
+  const duration = days ? `${days} ngày ${hours} giờ` : hours ? `${hours} giờ ${minutes} phút` : `${Math.max(1, minutes)} phút`
+  return overdue ? `Quá hạn ${duration}` : `Còn ${duration}`
 }

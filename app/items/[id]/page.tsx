@@ -83,9 +83,9 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
         </div>
         <div className={`mt-8 rounded-3xl border p-6 shadow-sm sm:p-10 ${urgent ? 'border-rose/45 bg-rose/10' : 'border-oak/30 bg-white/65'}`}>
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className={`rounded-full px-3 py-1 ${item.type === 'homework' ? 'border border-orange-800 bg-orange-700 text-white' : 'border border-oak/30 bg-white/70 text-ink/75'}`}>{typeLabels[item.type]}</span>
-            {item.subject && <span className={`rounded-full border px-3 py-1 ${subjectColors[item.subject] ?? 'border-oak/30 bg-white/70 text-ink'}`}>{item.subject}</span>}
-            {urgent && <span className="rounded-full bg-rose px-3 py-1 font-semibold text-white">CẦN CHÚ Ý ĐẶC BIỆT</span>}
+            <span className={`rounded-full px-3 py-1 font-bold ${item.type === 'homework' ? 'border border-orange-800 bg-orange-700 text-white' : 'border border-oak/30 bg-white/70 text-ink/75'}`}>{typeLabels[item.type]}</span>
+            {item.subject && <span className={`rounded-full border px-3 py-1 font-bold ${subjectColors[item.subject] ?? 'border-oak/30 bg-white/70 text-ink'}`}>{item.subject}</span>}
+            {urgent && <span className="rounded-full bg-rose px-3 py-1 font-bold text-white">CẦN CHÚ Ý ĐẶC BIỆT</span>}
           </div>
           <h1 className="mt-6 font-serif text-3xl font-medium leading-tight sm:text-5xl">{item.title}</h1>
           {item.description && <p className="mt-6 whitespace-pre-wrap text-base leading-8 text-ink/80">{item.description}</p>}
