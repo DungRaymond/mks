@@ -78,7 +78,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
     <main className="min-h-screen bg-linen px-5 py-10 text-ink sm:px-8 sm:py-16">
       <article className="mx-auto max-w-3xl">
         <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="text-sm text-ink/60 hover:text-ink">← Về trang lớp</Link>
+          <Link href="/" className="inline-flex min-h-11 items-center rounded-xl border border-oak/40 bg-white/70 px-4 text-sm font-medium text-ink shadow-sm transition hover:border-rose hover:bg-rose/5">← Trang chính</Link>
           {session && <div className="flex gap-2"><Link href="/admin/new" className="inline-flex min-h-11 items-center rounded-xl border border-oak/40 bg-white/70 px-4 text-sm font-medium text-ink shadow-sm transition hover:border-rose hover:bg-rose/5">Tạo task</Link>{['admin', 'officer'].includes(session.profile.role) && item.type !== 'notice' && <Link href={`/items/${id}/edit`} className="inline-flex min-h-11 items-center rounded-xl border border-oak/40 bg-white/70 px-4 text-sm font-medium text-ink shadow-sm transition hover:border-rose hover:bg-rose/5">Sửa</Link>}</div>}
         </div>
         <div className={`mt-8 rounded-3xl border p-6 shadow-sm sm:p-10 ${urgent ? 'border-rose/45 bg-rose/10' : 'border-oak/30 bg-white/65'}`}>

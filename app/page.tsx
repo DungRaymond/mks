@@ -65,8 +65,8 @@ export default async function Home() {
     <main className="min-h-screen bg-linen px-5 py-12 text-ink sm:px-8 sm:py-16">
       <div className="mx-auto max-w-5xl">
         <header className="mb-12 border-b border-oak/30 pb-8 sm:mb-14">
-          <Link href="/" className="mb-4 inline-flex" aria-label="K20 Dược - Trang chủ">
-            <Image src="/k20-duoc.svg" alt="K20 Dược" width={200} height={60} priority />
+          <Link href="/" className="mb-5 inline-flex" aria-label="Trang chính">
+            <Image src="/logo.svg" alt="Biểu tượng viên nang" width={100} height={100} priority />
           </Link>
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>

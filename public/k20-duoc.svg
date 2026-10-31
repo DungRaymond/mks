@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" role="img" aria-labelledby="title">
-  <title id="title">K20 Dược</title>
-  <rect width="320" height="96" rx="24" fill="#f5f0e7"/>
-  <path d="M28 21h8v24l20-24h10L48 44l20 31H58L42 50l-6 7v18h-8z" fill="#39342e"/>
-  <circle cx="92" cy="48" r="29" fill="#b77978"/>
-  <text x="92" y="57" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="700" fill="#fff">20</text>
-  <path d="M137 29h8v17l15-17h10l-16 18 18 28h-10l-14-22-3 3v19h-8z" fill="#39342e"/>
-  <text x="185" y="63" font-family="Georgia,serif" font-size="31" font-weight="700" letter-spacing="1" fill="#39342e">DƯỢC</text>
-</svg>
