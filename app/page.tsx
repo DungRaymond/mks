@@ -22,7 +22,8 @@ const subjectColors: Record<string, string> = {
   'Lý - dược': 'border-blue-500 bg-blue-100 text-blue-950',
   'Toán': 'border-blue-500 bg-blue-100 text-blue-950',
   'Hóa': 'border-yellow-500 bg-yellow-100 text-yellow-950',
-  'Hoá vô cơ - dược': 'border-yellow-500 bg-yellow-100 text-yellow-950',
+  'Hóa vô cơ - dược': 'border-yellow-500 bg-yellow-100 text-yellow-950',
+  'Modul Y sinh': 'border-cyan-500 bg-cyan-100 text-cyan-950',
   'Y sinh': 'border-cyan-500 bg-cyan-100 text-cyan-950',
   'Sinh': 'border-cyan-500 bg-cyan-100 text-cyan-950',
 }

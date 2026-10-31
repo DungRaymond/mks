@@ -29,7 +29,12 @@ export default function QuickTaskForm() {
         </label>
         <label className="text-sm font-medium">
           Môn học
-          <input name="subject" maxLength={120} placeholder="Ví dụ: Lý - dược" className="mt-1.5 h-11 w-full rounded-xl border border-oak/40 bg-linen px-3 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20" />
+          <select name="subject" defaultValue="" className="mt-1.5 h-11 w-full rounded-xl border border-oak/40 bg-linen px-3 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20">
+            <option value="">Chọn môn học</option>
+            <option>Modul Y sinh</option>
+            <option>Lý - dược</option>
+            <option>Hóa vô cơ - dược</option>
+          </select>
         </label>
         <label className="text-sm font-medium">
           Hạn (mặc định 7 ngày)

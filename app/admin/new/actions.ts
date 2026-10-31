@@ -22,7 +22,7 @@ function validateTask(formData: FormData, id?: string) {
 
   if (!['task', 'homework', 'notice'].includes(type)) return { error: 'fields' as const }
   if (!title || title.length > 240) return { error: 'title' as const }
-  if (subject.length > 120 || !['normal', 'high', 'urgent'].includes(priority)) {
+  if (!['', 'Modul Y sinh', 'Lý - dược', 'Hóa vô cơ - dược'].includes(subject) || !['normal', 'high', 'urgent'].includes(priority)) {
     return { error: 'fields' as const }
   }
   if (dueAt && Number.isNaN(Date.parse(dueAt))) return { error: 'due' as const }

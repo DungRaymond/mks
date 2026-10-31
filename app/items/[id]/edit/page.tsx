@@ -59,7 +59,9 @@ export default async function EditItemPage({
             <input required name="title" maxLength={240} defaultValue={item.title} className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-4" />
           </label>
           <label className="block text-sm font-medium">Môn học
-            <input name="subject" maxLength={120} defaultValue={item.subject ?? ''} className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-4" />
+            <select name="subject" defaultValue={item.subject ?? ''} className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-4">
+              <option value="">Không chọn môn</option><option>Modul Y sinh</option><option>Lý - dược</option><option>Hóa vô cơ - dược</option>
+            </select>
           </label>
           <label className="block text-sm font-medium">Mô tả
             <textarea name="description" rows={6} defaultValue={item.description ?? ''} className="mt-2 w-full rounded-xl border border-oak/40 bg-linen/60 p-4" />
