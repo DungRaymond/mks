@@ -25,6 +25,7 @@ export default function QuickTaskForm() {
           <select name="type" defaultValue="task" className="mt-1.5 h-11 w-full rounded-xl border border-oak/40 bg-linen px-3 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20">
             <option value="task">Task lớp</option>
             <option value="homework">Bài tập về nhà</option>
+            <option value="notice">Thông báo</option>
           </select>
         </label>
         <label className="text-sm font-medium">
