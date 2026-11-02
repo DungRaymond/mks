@@ -53,7 +53,10 @@ export default function QuickTaskForm() {
         <input type="hidden" name="is_published" value="on" />
         {state?.error && <p role="alert" className="text-sm text-rose sm:col-span-2">Không lưu được task. Kiểm tra dữ liệu hoặc thử lại.</p>}
         <div className="flex items-center gap-4 sm:col-span-2">
-          <button disabled={pending} className="h-11 rounded-xl bg-ink px-5 text-sm font-medium text-linen disabled:opacity-60">{pending ? 'Đang lưu…' : 'Tạo task'}</button>
+          <button disabled={pending} className="relative isolate h-11 overflow-hidden rounded-xl bg-ink px-5 text-sm font-medium text-linen disabled:opacity-60">
+            {pending && <span aria-hidden="true" className="absolute inset-[-100%] -z-10 animate-[spin_1.5s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0_300deg,#f5f0e7_360deg)]" />}
+            <span className="relative">{pending ? 'Đang lưu…' : 'Tạo task'}</span>
+          </button>
           <Link href="/admin/new" className="text-sm text-ink/60 underline">Tùy chọn đầy đủ</Link>
         </div>
       </form>

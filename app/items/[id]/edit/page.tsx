@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getSession } from '@/lib/session'
 import { updateTask } from '@/app/admin/new/actions'
 import ImageUploader from '@/app/admin/new/ImageUploader'
+import SaveTaskForm from '@/app/SaveTaskForm'
 
 const errorText: Record<string, string> = {
   title: 'Nhập tiêu đề, tối đa 240 ký tự.',
@@ -49,7 +50,7 @@ export default async function EditItemPage({
         <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-rose">Nội dung lớp</p>
         <h1 className="mt-2 font-serif text-4xl">Sửa task / bài tập</h1>
         {error && errorText[error] && <p role="alert" className="mt-6 rounded-xl bg-rose/10 p-4 text-sm text-rose">{errorText[error]}</p>}
-        <form action={action} className="mt-8 space-y-5 rounded-3xl border border-oak/30 bg-white/65 p-6 shadow-sm sm:p-8">
+        <SaveTaskForm action={action} submitLabel="Lưu thay đổi" className="mt-8 space-y-5 rounded-3xl border border-oak/30 bg-white/65 p-6 shadow-sm sm:p-8">
           <label className="block text-sm font-medium">Loại nội dung
             <select name="type" defaultValue={item.type} className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-3">
               <option value="task">Task lớp</option><option value="homework">Bài tập về nhà</option><option value="notice">Thông báo</option>
@@ -78,11 +79,8 @@ export default async function EditItemPage({
             </label>
           </div>
           <label className="flex items-center gap-3 text-sm"><input name="is_published" type="checkbox" defaultChecked={item.is_published} className="h-4 w-4" />Công khai task</label>
-          <div className="flex gap-3">
-            <button className="h-12 rounded-xl bg-ink px-6 font-medium text-linen">Lưu thay đổi</button>
-            <Link href={`/items/${id}`} className="inline-flex h-12 items-center rounded-xl border border-oak/40 px-5 text-sm">Hủy</Link>
-          </div>
-        </form>
+          <Link href={`/items/${id}`} className="inline-flex h-12 items-center rounded-xl border border-oak/40 px-5 text-sm">Hủy</Link>
+        </SaveTaskForm>
       </section>
     </main>
   )

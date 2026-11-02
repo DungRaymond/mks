@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createTask } from './actions'
 import ImageUploader from './ImageUploader'
+import SaveTaskForm from '@/app/SaveTaskForm'
 import { getSession } from '@/lib/session'
 
 const errors: Record<string, string> = {
@@ -33,7 +34,7 @@ export default async function NewTaskPage({
 
         {error && errors[error] && <p role="alert" className="mt-6 rounded-xl bg-rose/10 p-4 text-sm text-rose">{errors[error]}</p>}
 
-        <form action={createTask} className="mt-8 space-y-5 rounded-3xl border border-oak/30 bg-white/65 p-6 shadow-sm sm:p-8">
+        <SaveTaskForm action={createTask} submitLabel="Tạo task" className="mt-8 space-y-5 rounded-3xl border border-oak/30 bg-white/65 p-6 shadow-sm sm:p-8">
           <label className="block text-sm font-medium">
             Loại nội dung
             <select name="type" defaultValue="task" className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-3 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20">
@@ -87,11 +88,8 @@ export default async function NewTaskPage({
             Công khai task ngay
           </label>
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button className="h-12 rounded-xl bg-ink px-6 font-medium text-linen transition hover:bg-ink/85">Tạo task</button>
-            <Link href="/" className="inline-flex h-12 items-center rounded-xl border border-oak/40 px-5 text-sm font-medium hover:bg-beige/50">Hủy</Link>
-          </div>
-        </form>
+          <Link href="/" className="inline-flex h-12 items-center rounded-xl border border-oak/40 px-5 text-sm font-medium hover:bg-beige/50">Hủy</Link>
+        </SaveTaskForm>
       </section>
     </main>
   )

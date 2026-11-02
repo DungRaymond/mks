@@ -16,6 +16,8 @@ type Item = {
   updated_at: string
 }
 
+type ItemImage = { uc_uuid: string; cdn_url: string; sort_order: number }
+
 const typeLabels = { task: 'Task lớp', homework: 'Bài tập', notice: 'Thông báo' }
 const subjectColors: Record<string, string> = {
   'Lý - dược': 'border-blue-500 bg-blue-100 text-blue-950',
@@ -70,8 +72,13 @@ export async function generateMetadata({
 
 export default async function ItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [item, session] = await Promise.all([getItem(id), getSession()])
+  const [item, session, { data: images, error: imagesError }] = await Promise.all([
+    getItem(id),
+    getSession(),
+    createPublicClient().from('item_images').select('uc_uuid, cdn_url, sort_order').eq('item_id', id).order('sort_order'),
+  ])
   if (!item) notFound()
+  if (imagesError) throw new Error('Could not load item images')
 
   const urgent = item.type === 'notice' && item.priority === 'urgent'
 
@@ -90,6 +97,9 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           </div>
           <h1 className="mt-6 font-serif text-3xl font-medium leading-tight sm:text-5xl">{item.title}</h1>
           {item.description && <p className="mt-6 whitespace-pre-wrap text-base leading-8 text-ink/80">{item.description}</p>}
+          {!!images?.length && <div className="mt-6 grid gap-3 sm:grid-cols-2" aria-label="Ảnh đính kèm">
+            {(images as ItemImage[]).map((image) => <a key={image.uc_uuid} href={image.cdn_url} target="_blank" rel="noreferrer"><img src={image.cdn_url} alt="Ảnh đính kèm" className="max-h-96 w-full rounded-xl border border-oak/25 object-contain" /></a>)}
+          </div>}
           <dl className="mt-8 grid gap-4 border-t border-oak/25 pt-6 text-sm sm:grid-cols-2">
             {item.due_at && <div><dt className="text-xs text-ink/55">Hạn hoàn thành</dt><dd className="mt-1 font-medium">{formatDate(item.due_at)}</dd></div>}
             <div><dt className="text-xs text-ink/55">Cập nhật lần cuối</dt><dd className="mt-1 font-medium">{formatDate(item.updated_at)}</dd></div>
