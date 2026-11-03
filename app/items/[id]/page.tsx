@@ -6,7 +6,7 @@ import { createPublicClient } from '@/lib/supabase/public'
 
 type Item = {
   id: string
-  type: 'task' | 'homework' | 'notice'
+  type: 'task' | 'homework' | 'notice' | 'announcement'
   title: string
   description: string | null
   subject: string | null
@@ -18,7 +18,7 @@ type Item = {
 
 type ItemImage = { uc_uuid: string; cdn_url: string; sort_order: number }
 
-const typeLabels = { task: 'Task lớp', homework: 'Bài tập', notice: 'Thông báo' }
+const typeLabels = { task: 'Task lớp', homework: 'Bài tập', notice: 'Lưu ý', announcement: 'Thông báo' }
 const subjectColors: Record<string, string> = {
   'Lý - dược': 'border-blue-500 bg-blue-100 text-blue-950',
   Toán: 'border-blue-500 bg-blue-100 text-blue-950',
@@ -80,7 +80,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   if (!item) notFound()
   if (imagesError) throw new Error('Could not load item images')
 
-  const urgent = item.type === 'notice' && item.priority === 'urgent'
+  const urgent = (item.type === 'notice' || item.type === 'announcement') && item.priority === 'urgent'
 
   return (
     <main className="min-h-screen bg-linen px-5 py-10 text-ink sm:px-8 sm:py-16">

@@ -6,7 +6,7 @@ import Image from 'next/image'
 
 type Item = {
   id: string
-  type: 'task' | 'homework' | 'notice'
+  type: 'task' | 'homework' | 'notice' | 'announcement'
   title: string
   description: string | null
   subject: string | null
@@ -16,7 +16,7 @@ type Item = {
 }
 
 const priorityLabel = { urgent: 'Khẩn cấp', high: 'Ưu tiên cao', normal: 'Bình thường' }
-const typeLabel = { task: 'Task lớp', homework: 'Bài tập', notice: 'Chú ý' }
+const typeLabel = { task: 'Task lớp', homework: 'Bài tập', notice: 'Lưu ý', announcement: 'Thông báo' }
 const typeChip = 'border border-oak/30 bg-white/70 text-ink/75'
 const subjectColors: Record<string, string> = {
   'Lý - dược': 'border-blue-500 bg-blue-100 text-blue-950',
@@ -118,7 +118,7 @@ function SectionHeading({ id, eyebrow, title }: { id: string; eyebrow: string; t
 }
 
 function ItemCard({ item, now }: { item: Item; now: string }) {
-  const urgentNotice = item.type === 'notice' && item.priority === 'urgent'
+  const urgentNotice = (item.type === 'notice' || item.type === 'announcement') && item.priority === 'urgent'
   const overdue = item.due_at !== null && Date.parse(item.due_at) < Date.parse(now)
   const subjectColor = item.subject ? subjectColors[item.subject] : undefined
   return <Link href={`/items/${item.id}`} className={`block rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${overdue ? 'border-red-600 bg-gray-400 text-gray-800' : urgentNotice ? 'border-rose/50 bg-rose/10' : subjectColor ?? 'border-oak/30 bg-white/65'}`}>

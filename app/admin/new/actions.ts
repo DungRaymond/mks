@@ -20,7 +20,7 @@ function validateTask(formData: FormData, id?: string) {
   }
   const published = formData.get('is_published') !== 'off'
 
-  if (!['task', 'homework', 'notice'].includes(type)) return { error: 'fields' as const }
+  if (!['task', 'homework', 'notice', 'announcement'].includes(type)) return { error: 'fields' as const }
   if (!title || title.length > 240) return { error: 'title' as const }
   if (!['', 'Modul Y sinh', 'Lý - dược', 'Hóa vô cơ - dược'].includes(subject) || !['normal', 'high', 'urgent'].includes(priority)) {
     return { error: 'fields' as const }
@@ -38,7 +38,7 @@ function validateTask(formData: FormData, id?: string) {
       description: description || null,
       subject: subject || null,
       priority,
-       due_at: type === 'notice' ? null : dueAt ? `${dueAt}:00+07:00` : null,
+       due_at: ['notice', 'announcement'].includes(type) ? null : dueAt ? `${dueAt}:00+07:00` : null,
       is_published: published,
       images: imageIds.map((uuid: string, sort_order: number) => ({
         uc_uuid: uuid,

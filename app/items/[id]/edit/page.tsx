@@ -29,7 +29,7 @@ export default async function EditItemPage({
     .from('class_items')
     .select('id, type, title, description, subject, priority, due_at, is_published')
     .eq('id', id)
-    .in('type', ['task', 'homework', 'notice'])
+    .in('type', ['task', 'homework', 'notice', 'announcement'])
     .maybeSingle()
   if (loadError) throw new Error('Could not load item')
   if (!item) notFound()
@@ -53,7 +53,7 @@ export default async function EditItemPage({
         <SaveTaskForm action={action} submitLabel="Lưu thay đổi" className="mt-8 space-y-5 rounded-3xl border border-oak/30 bg-white/65 p-6 shadow-sm sm:p-8">
           <label className="block text-sm font-medium">Loại nội dung
             <select name="type" defaultValue={item.type} className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-3">
-              <option value="task">Task lớp</option><option value="homework">Bài tập về nhà</option><option value="notice">Thông báo</option>
+              <option value="task">Task lớp</option><option value="homework">Bài tập về nhà</option><option value="notice">Lưu ý</option><option value="announcement">Thông báo</option>
             </select>
           </label>
           <label className="block text-sm font-medium">Tiêu đề

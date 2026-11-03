@@ -40,7 +40,8 @@ export default async function NewTaskPage({
             <select name="type" defaultValue="task" className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-3 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20">
               <option value="task">Task lớp</option>
               <option value="homework">Bài tập về nhà</option>
-              <option value="notice">Thông báo</option>
+              <option value="notice">Lưu ý</option>
+              <option value="announcement">Thông báo</option>
             </select>
           </label>
           <label className="block text-sm font-medium">
