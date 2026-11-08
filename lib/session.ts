@@ -47,11 +47,11 @@ export async function getSession() {
   if (!data || !profile) return null
 
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 864e5)
-  const { error } = await supabase
+  // Fire-and-forget: sliding the expiry must not add a DB round-trip to every request.
+  void supabase
     .from('auth_sessions')
     .update({ expires_at: expiresAt.toISOString() })
     .eq('token_hash', hashToken(token))
-  if (error) return null
 
   // Cookie expiry is a fixed 10-day upper bound. Server-side expiry slides on each authenticated request.
 

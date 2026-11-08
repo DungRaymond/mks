@@ -2,6 +2,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getSession } from '@/lib/session'
 
 export async function updateSession(request: NextRequest) {
+  // Public read-only sync endpoint: skip the session DB round-trips.
+  if (request.nextUrl.pathname === '/api/items') return NextResponse.next()
+
   const session = await getSession()
   if (request.nextUrl.pathname.startsWith('/admin') && !session) {
     const url = request.nextUrl.clone()
