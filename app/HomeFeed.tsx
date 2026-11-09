@@ -3,23 +3,15 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { splitSections, type Item } from '@/lib/items'
+import SubjectBadge from '@/components/SubjectBadge'
+import { subjectLabel, subjectVars } from '@/lib/subjects'
 
-const CACHE_KEY = 'class-hub-items-v1'
+const CACHE_KEY = 'class-hub-items-v2'
 const REVALIDATE_MS = 60_000
 
 const priorityLabel = { urgent: 'Khẩn cấp', high: 'Ưu tiên cao', normal: 'Bình thường' }
 const typeLabel = { task: 'Task lớp', homework: 'Bài tập', notice: 'Lưu ý', announcement: 'Thông báo' }
 const typeChip = 'border border-oak/30 bg-white/70 text-ink/75'
-const subjectColors: Record<string, string> = {
-  'Lý - dược': 'border-blue-500 bg-blue-100 text-blue-950',
-  'Toán': 'border-blue-500 bg-blue-100 text-blue-950',
-  'Hóa': 'border-yellow-500 bg-yellow-100 text-yellow-950',
-  'Hóa vô cơ - dược': 'border-yellow-500 bg-yellow-100 text-yellow-950',
-  'Modul Y sinh': 'border-cyan-500 bg-cyan-100 text-cyan-950',
-  'Y sinh': 'border-cyan-500 bg-cyan-100 text-cyan-950',
-  'Sinh': 'border-cyan-500 bg-cyan-100 text-cyan-950',
-}
-
 let snapshot: Item[] | null = null
 let snapshotLoaded = false
 const listeners = new Set<() => void>()
@@ -186,8 +178,8 @@ function SectionHeading({ id, eyebrow, title }: { id: string; eyebrow: string; t
 function ItemCard({ item, now }: { item: Item; now: number }) {
   const urgentNotice = (item.type === 'notice' || item.type === 'announcement') && item.priority === 'urgent'
   const overdue = item.due_at !== null && Date.parse(item.due_at) < now
-  const subjectColor = item.subject ? subjectColors[item.subject] : undefined
-  return <Link href={`/items/${item.id}`} className={`block rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${overdue ? 'border-red-600 bg-gray-400 text-gray-800' : urgentNotice ? 'border-rose/50 bg-rose/10' : subjectColor ?? 'border-oak/30 bg-white/65'}`}>
+  const subjectStyle = !overdue && !urgentNotice ? subjectVars(item.subjects) : null
+  return <Link href={`/items/${item.id}`} className={`block rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${overdue ? 'border-red-600 bg-gray-400 text-gray-800' : urgentNotice ? 'border-rose/50 bg-rose/10' : subjectStyle ? 'subject-surface' : 'border-oak/30 bg-white/65'}`} style={subjectStyle ?? undefined}>
     <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
       <span className={`rounded-full px-3 py-1 font-bold ${overdue ? 'border border-gray-500 bg-gray-400 text-gray-800' : item.type === 'homework' ? 'border border-orange-800 bg-orange-700 text-white' : typeChip}`}>{typeLabel[item.type]}</span>
       {overdue && <span className="rounded-full border border-red-600 bg-red-100 px-3 py-1 font-bold text-red-800">ĐÃ HẾT HẠN</span>}
@@ -198,7 +190,7 @@ function ItemCard({ item, now }: { item: Item; now: number }) {
     <h3 className="text-lg font-semibold leading-snug">{item.title}</h3>
     {item.description && <p className={`mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 ${overdue ? 'text-gray-600' : 'text-ink/65'}`}>{item.description}</p>}
     <div className={`mt-5 flex flex-wrap justify-between gap-2 border-t pt-4 text-xs ${overdue ? 'border-gray-500 text-gray-700' : 'border-oak/20 text-ink/60'}`}>
-      <span className={`rounded-full border px-3 py-1 font-bold ${overdue ? 'border-gray-500 bg-gray-400 text-gray-800' : subjectColors[item.subject ?? ''] ?? 'border-oak/30 bg-white/70'}`}>{item.subject ?? 'Cả lớp'}</span>
+      {overdue ? <span className="rounded-full border border-gray-500 bg-gray-400 px-3 py-1 font-bold text-gray-800">{subjectLabel(item.subjects) ?? 'Cả lớp'}</span> : <SubjectBadge names={item.subjects} />}
       {item.due_at ? <time dateTime={item.due_at}>Hạn: {formatDate(item.due_at)}</time> : <time dateTime={item.updated_at}>Cập nhật: {formatDate(item.updated_at)}</time>}
     </div>
   </Link>
@@ -206,7 +198,7 @@ function ItemCard({ item, now }: { item: Item; now: number }) {
 
 function RecentItem({ item }: { item: Item }) {
   return <Link href={`/items/${item.id}`} className="flex flex-col justify-between gap-2 py-4 transition hover:text-rose sm:flex-row sm:items-center">
-    <div className="min-w-0"><p className="text-xs text-rose">{typeLabel[item.type]}{item.subject ? ` · ${item.subject}` : ''}</p><h3 className="mt-1 truncate font-medium">{item.title}</h3></div>
+    <div className="min-w-0"><p className="text-xs text-rose">{typeLabel[item.type]}{subjectLabel(item.subjects) ? ` · ${subjectLabel(item.subjects)}` : ''}</p><h3 className="mt-1 truncate font-medium">{item.title}</h3></div>
     <time className="shrink-0 text-xs text-ink/55" dateTime={item.updated_at}>Cập nhật {formatDate(item.updated_at)}</time>
   </Link>
 }

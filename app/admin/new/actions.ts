@@ -4,11 +4,12 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { SUBJECT_NAMES } from '@/lib/subjects'
 
 function validateTask(formData: FormData, id?: string) {
   const type = String(formData.get('type') ?? 'task')
   const title = String(formData.get('title') ?? '').trim()
-  const subject = String(formData.get('subject') ?? '').trim()
+  const subjects = formData.getAll('subjects').map((value) => String(value).trim())
   const description = String(formData.get('description') ?? '').trim()
   const priority = String(formData.get('priority') ?? 'normal')
   const dueAt = String(formData.get('due_at') ?? '').trim()
@@ -22,7 +23,8 @@ function validateTask(formData: FormData, id?: string) {
 
   if (!['task', 'homework', 'notice', 'announcement'].includes(type)) return { error: 'fields' as const }
   if (!title || title.length > 240) return { error: 'title' as const }
-  if (!['', 'Modul Y sinh', 'Lý - dược', 'Hóa vô cơ - dược'].includes(subject) || !['normal', 'high', 'urgent'].includes(priority)) {
+  const uniqueSubjects = [...new Set(subjects)]
+  if (uniqueSubjects.length !== subjects.length || subjects.some((subject) => !SUBJECT_NAMES.includes(subject)) || !['normal', 'high', 'urgent'].includes(priority)) {
     return { error: 'fields' as const }
   }
   if (dueAt && Number.isNaN(Date.parse(dueAt))) return { error: 'due' as const }
@@ -36,7 +38,7 @@ function validateTask(formData: FormData, id?: string) {
       ...(id ? { id } : {}),
       title,
       description: description || null,
-      subject: subject || null,
+      subjects: SUBJECT_NAMES.filter((subject) => uniqueSubjects.includes(subject)),
       priority,
        due_at: ['notice', 'announcement'].includes(type) ? null : dueAt ? `${dueAt}:00+07:00` : null,
       is_published: published,
@@ -83,4 +85,33 @@ export async function updateTask(id: string, formData: FormData) {
   const result = await saveTask(formData, id)
   if ('error' in result) redirect(`/items/${id}/edit?error=${result.error}`)
   redirect(`/items/${id}`)
+}
+
+export async function archiveTask(id: string, archived: boolean) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) redirect('/admin')
+  const session = await getSession()
+  if (!session || !['admin', 'officer'].includes(session.profile.role)) redirect('/login')
+  const { error } = await createAdminClient()
+    .from('class_items')
+    .update({ is_archived: archived })
+    .eq('id', id)
+  if (error) redirect(`/items/${id}?error=save`)
+  revalidatePath('/')
+  revalidatePath('/admin')
+  revalidatePath(`/items/${id}`)
+  redirect('/admin')
+}
+
+export async function deleteTask(id: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) redirect('/admin')
+  const session = await getSession()
+  if (!session || session.profile.role !== 'admin') redirect('/login')
+  const { error } = await createAdminClient().rpc('delete_class_item', {
+    p_item_id: id,
+    p_actor_id: session.profileId,
+  })
+  if (error) redirect(`/items/${id}?error=delete`)
+  revalidatePath('/')
+  revalidatePath('/admin')
+  redirect('/admin')
 }

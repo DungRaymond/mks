@@ -13,3 +13,71 @@ body {
   background: #f5f0e7;
   color: #39342e;
 }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #b99b78 #e7ddcb;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e7ddcb;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #e7ddcb;
+  border-radius: 9999px;
+  background: #b99b78;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b77978;
+}
+
+.subject-gradient {
+  background-color: var(--subject-line);
+  background-image: var(--subject-edge-srgb);
+}
+
+.subject-surface {
+  border-color: var(--subject-line);
+  background-color: var(--subject-fill);
+  background-image: var(--subject-wash), var(--subject-edge-srgb);
+  background-clip: padding-box, border-box;
+}
+
+@supports (background-image: linear-gradient(in oklch, red, blue)) {
+  .subject-gradient {
+    background-image: var(--subject-edge);
+  }
+
+  .subject-surface {
+    border-color: transparent;
+    background-image: var(--subject-wash), var(--subject-edge);
+  }
+}
+
+@keyframes subject-swatch-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.subject-swatch {
+  animation: subject-swatch-in 0.28s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subject-swatch {
+    animation: none;
+  }
+}

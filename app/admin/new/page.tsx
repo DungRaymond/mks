@@ -4,6 +4,7 @@ import { createTask } from './actions'
 import ImageUploader from './ImageUploader'
 import SaveTaskForm from '@/app/SaveTaskForm'
 import { getSession } from '@/lib/session'
+import SubjectPicker from '@/app/SubjectPicker'
 
 const errors: Record<string, string> = {
   title: 'Nhập tiêu đề, tối đa 240 ký tự.',
@@ -49,15 +50,7 @@ export default async function NewTaskPage({
             <input required name="title" maxLength={240} className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-4 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20" />
           </label>
 
-          <label className="block text-sm font-medium">
-            Môn học
-            <select name="subject" defaultValue="" className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-4 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20">
-              <option value="">Chọn môn học (không bắt buộc)</option>
-              <option>Modul Y sinh</option>
-              <option>Lý - dược</option>
-              <option>Hóa vô cơ - dược</option>
-            </select>
-          </label>
+          <SubjectPicker />
 
           <label className="block text-sm font-medium">
             Mô tả

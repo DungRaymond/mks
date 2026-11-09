@@ -4,6 +4,7 @@ import { useActionState, useEffect } from 'react'
 import Link from 'next/link'
 import { createTaskQuick } from '@/app/admin/new/actions'
 import ImageUploader from '@/app/admin/new/ImageUploader'
+import SubjectPicker from '@/app/SubjectPicker'
 
 export default function QuickTaskForm() {
   const [state, action, pending] = useActionState(createTaskQuick, null)
@@ -29,15 +30,7 @@ export default function QuickTaskForm() {
             <option value="announcement">Thông báo</option>
           </select>
         </label>
-        <label className="text-sm font-medium">
-          Môn học
-          <select name="subject" defaultValue="" className="mt-1.5 h-11 w-full rounded-xl border border-oak/40 bg-linen px-3 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20">
-            <option value="">Chọn môn học</option>
-            <option>Modul Y sinh</option>
-            <option>Lý - dược</option>
-            <option>Hóa vô cơ - dược</option>
-          </select>
-        </label>
+        <SubjectPicker className="sm:col-span-2" />
         <label className="text-sm font-medium">
           Hạn (mặc định 7 ngày)
           <input name="due_at" type="datetime-local" className="mt-1.5 h-11 w-full rounded-xl border border-oak/40 bg-linen px-3 outline-none focus:border-rose focus:ring-2 focus:ring-rose/20" />

@@ -5,6 +5,7 @@ import { getSession } from '@/lib/session'
 import { updateTask } from '@/app/admin/new/actions'
 import ImageUploader from '@/app/admin/new/ImageUploader'
 import SaveTaskForm from '@/app/SaveTaskForm'
+import SubjectPicker from '@/app/SubjectPicker'
 
 const errorText: Record<string, string> = {
   title: 'Nhập tiêu đề, tối đa 240 ký tự.',
@@ -27,7 +28,7 @@ export default async function EditItemPage({
 
   const { data: item, error: loadError } = await createAdminClient()
     .from('class_items')
-    .select('id, type, title, description, subject, priority, due_at, is_published')
+    .select('id, type, title, description, subjects, priority, due_at, is_published')
     .eq('id', id)
     .in('type', ['task', 'homework', 'notice', 'announcement'])
     .maybeSingle()
@@ -59,11 +60,7 @@ export default async function EditItemPage({
           <label className="block text-sm font-medium">Tiêu đề
             <input required name="title" maxLength={240} defaultValue={item.title} className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-4" />
           </label>
-          <label className="block text-sm font-medium">Môn học
-            <select name="subject" defaultValue={item.subject ?? ''} className="mt-2 h-12 w-full rounded-xl border border-oak/40 bg-linen/60 px-4">
-              <option value="">Không chọn môn</option><option>Modul Y sinh</option><option>Lý - dược</option><option>Hóa vô cơ - dược</option>
-            </select>
-          </label>
+          <SubjectPicker initialSubjects={item.subjects ?? []} />
           <label className="block text-sm font-medium">Mô tả
             <textarea name="description" rows={6} defaultValue={item.description ?? ''} className="mt-2 w-full rounded-xl border border-oak/40 bg-linen/60 p-4" />
           </label>

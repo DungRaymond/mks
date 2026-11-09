@@ -3,14 +3,15 @@ export type Item = {
   type: 'task' | 'homework' | 'notice' | 'announcement'
   title: string
   description: string | null
-  subject: string | null
+  subjects: string[]
+  is_archived: boolean
   priority: 'normal' | 'high' | 'urgent'
   due_at: string | null
   is_done: boolean
   updated_at: string
 }
 
-export const ITEM_FIELDS = 'id, type, title, description, subject, priority, due_at, is_done, updated_at'
+export const ITEM_FIELDS = 'id, type, title, description, subjects, is_archived, priority, due_at, is_done, updated_at'
 
 const priorityRank = { normal: 0, high: 1, urgent: 2 }
 
