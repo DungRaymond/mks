@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getSession } from '@/lib/session'
 import { signOut } from '@/app/login/signout'
+import HomeButton from '@/components/HomeButton'
+import { itemHref } from '@/lib/item-slugs'
 
 type Item = {
   id: string
@@ -33,7 +35,7 @@ export default async function AdminPage() {
       <div className="mx-auto max-w-5xl">
         <header className="mb-8 flex flex-wrap items-end justify-between gap-5 border-b border-oak/30 pb-6">
           <div>
-            <Link href="/" className="text-sm text-ink/60 hover:text-ink">← Trang chủ</Link>
+            <HomeButton />
             <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-rose">Quản lý lớp</p>
             <h1 className="mt-1 font-serif text-4xl">Xin chào, {session.profile.full_name}</h1>
           </div>
@@ -50,7 +52,7 @@ export default async function AdminPage() {
           </div>
           {items.length ? (
             <div className="divide-y divide-oak/25 rounded-2xl border border-oak/30 bg-white/65 px-5">
-              {items.map((item) => <Link key={item.id} href={`/items/${item.id}`} className="flex flex-col justify-between gap-3 py-4 transition-colors hover:text-rose focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose sm:flex-row sm:items-center">
+              {items.map((item) => <Link key={item.id} href={itemHref(item)} className="flex flex-col justify-between gap-3 py-4 transition-colors hover:text-rose focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose sm:flex-row sm:items-center">
                 <div className="min-w-0">
                   <h3 className="font-medium">{item.title}</h3>
                   <p className="mt-1 text-xs text-ink/55">{item.subject ?? 'Chưa phân môn'} · {item.type === 'task' ? `Task · ${item.is_done ? 'Hoàn thành' : 'Chưa hoàn thành'}` : item.type === 'homework' ? 'Bài tập về nhà' : item.type === 'notice' ? 'Lưu ý' : 'Thông báo'}</p>

@@ -1,10 +1,11 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { SUBJECT_NAMES } from '@/lib/subjects'
+import { itemHref } from '@/lib/item-slugs'
 
 function validateTask(formData: FormData, id?: string) {
   const type = String(formData.get('type') ?? 'task')
@@ -64,27 +65,25 @@ async function saveTask(formData: FormData, id?: string) {
   })
 
   if (error || !data) return { error: 'save' as const }
+  const href = itemHref({ id: data as string, title: result.value.title })
+  updateTag('class-items')
   revalidatePath('/')
-  revalidatePath(`/items/${data}`)
+  revalidatePath('/items/[id]', 'page')
   revalidatePath('/admin')
-  return { id: data as string }
+  return { id: data as string, href }
 }
 
 export async function createTask(formData: FormData) {
   const result = await saveTask(formData)
   if ('error' in result) redirect(`/admin/new?error=${result.error}`)
-  redirect(`/items/${result.id}`)
-}
-
-export async function createTaskQuick(_previousState: { error?: string } | null, formData: FormData) {
-  return saveTask(formData)
+  redirect(result.href)
 }
 
 export async function updateTask(id: string, formData: FormData) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) redirect('/admin')
   const result = await saveTask(formData, id)
   if ('error' in result) redirect(`/items/${id}/edit?error=${result.error}`)
-  redirect(`/items/${id}`)
+  redirect(result.href)
 }
 
 export async function archiveTask(id: string, archived: boolean) {
@@ -96,9 +95,10 @@ export async function archiveTask(id: string, archived: boolean) {
     .update({ is_archived: archived })
     .eq('id', id)
   if (error) redirect(`/items/${id}?error=save`)
+  updateTag('class-items')
   revalidatePath('/')
   revalidatePath('/admin')
-  revalidatePath(`/items/${id}`)
+  revalidatePath('/items/[id]', 'page')
   redirect('/admin')
 }
 
@@ -111,6 +111,7 @@ export async function deleteTask(id: string) {
     p_actor_id: session.profileId,
   })
   if (error) redirect(`/items/${id}?error=delete`)
+  updateTag('class-items')
   revalidatePath('/')
   revalidatePath('/admin')
   redirect('/admin')

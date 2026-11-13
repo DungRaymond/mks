@@ -6,6 +6,8 @@ import { updateTask } from '@/app/admin/new/actions'
 import ImageUploader from '@/app/admin/new/ImageUploader'
 import SaveTaskForm from '@/app/SaveTaskForm'
 import SubjectPicker from '@/app/SubjectPicker'
+import HomeButton from '@/components/HomeButton'
+import { findItemByRoute, itemHref, itemSlug, parseItemRoute } from '@/lib/item-slugs'
 
 const errorText: Record<string, string> = {
   title: 'Nhập tiêu đề, tối đa 240 ký tự.',
@@ -22,18 +24,23 @@ export default async function EditItemPage({
   params: Promise<{ id: string }>
   searchParams: Promise<{ error?: string }>
 }) {
-  const [{ id }, { error }, session] = await Promise.all([params, searchParams, getSession()])
-  if (!session) redirect(`/login?next=${encodeURIComponent(`/items/${id}/edit`)}`)
-  if (!['admin', 'officer'].includes(session.profile.role)) redirect(`/items/${id}`)
+  const [{ id: routeKey }, { error }, session] = await Promise.all([params, searchParams, getSession()])
+  if (!session) redirect(`/login?next=${encodeURIComponent(`/items/${routeKey}/edit`)}`)
+  if (!['admin', 'officer'].includes(session.profile.role)) redirect(`/items/${routeKey}`)
+  const parsed = parseItemRoute(routeKey)
+  if (!parsed) notFound()
 
-  const { data: item, error: loadError } = await createAdminClient()
+  let query = createAdminClient()
     .from('class_items')
     .select('id, type, title, description, subjects, priority, due_at, is_published')
-    .eq('id', id)
     .in('type', ['task', 'homework', 'notice', 'announcement'])
-    .maybeSingle()
+  query = parsed.kind === 'uuid' ? query.eq('id', parsed.id) : query.gte('id', parsed.lower).lte('id', parsed.upper)
+  const { data, error: loadError } = await query
   if (loadError) throw new Error('Could not load item')
+  const item = findItemByRoute(data ?? [], routeKey)
   if (!item) notFound()
+  const id = item.id
+  if (routeKey !== itemSlug(item)) redirect(`${itemHref(item)}/edit${error ? `?error=${encodeURIComponent(error)}` : ''}`)
 
   const { data: images, error: imagesError } = await createAdminClient()
     .from('item_images')
@@ -47,7 +54,7 @@ export default async function EditItemPage({
   return (
     <main className="min-h-screen bg-linen px-5 py-10 text-ink sm:px-8 sm:py-14">
       <section className="mx-auto max-w-2xl">
-        <Link href={`/items/${id}`} className="text-sm text-ink/60 hover:text-ink">← Chi tiết task</Link>
+        <div className="flex flex-wrap gap-3"><HomeButton /><Link href={itemHref(item)} className="nav-button">← Chi tiết nội dung</Link></div>
         <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-rose">Nội dung lớp</p>
         <h1 className="mt-2 font-serif text-4xl">Sửa task / bài tập</h1>
         {error && errorText[error] && <p role="alert" className="mt-6 rounded-xl bg-rose/10 p-4 text-sm text-rose">{errorText[error]}</p>}
@@ -76,7 +83,7 @@ export default async function EditItemPage({
             </label>
           </div>
           <label className="flex items-center gap-3 text-sm"><input name="is_published" type="checkbox" defaultChecked={item.is_published} className="h-4 w-4" />Công khai task</label>
-          <Link href={`/items/${id}`} className="inline-flex h-12 items-center rounded-xl border border-oak/40 px-5 text-sm">Hủy</Link>
+          <Link href={itemHref(item)} className="inline-flex h-12 items-center rounded-xl border border-oak/40 px-5 text-sm">Hủy</Link>
         </SaveTaskForm>
       </section>
     </main>

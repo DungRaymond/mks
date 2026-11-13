@@ -1,5 +1,5 @@
 import { signIn } from './actions'
-import Link from 'next/link'
+import HomeButton from '@/components/HomeButton'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 
@@ -18,7 +18,7 @@ export default async function LoginPage({
   return (
     <main className="grid min-h-screen place-items-center bg-linen px-5 py-12 text-ink">
       <section className="w-full max-w-md rounded-3xl border border-oak/30 bg-white/70 p-7 shadow-sm sm:p-9">
-        <Link href="/" className="text-sm font-medium uppercase tracking-[0.2em] text-rose">Class Hub</Link>
+        <HomeButton />
         <h1 className="mt-5 font-serif text-3xl">Đăng nhập cán bộ</h1>
         <p className="mt-2 text-sm leading-6 text-ink/65">Dùng tài khoản được cấp bởi quản trị viên lớp.</p>
         {params.error && errors[params.error] && (

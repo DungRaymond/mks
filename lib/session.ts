@@ -2,6 +2,7 @@ import 'server-only'
 import { createHash, randomBytes } from 'node:crypto'
 import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { cache } from 'react'
 
 const COOKIE = 'class_hub_session'
 const SESSION_DAYS = 10
@@ -30,7 +31,7 @@ export async function createSession(profileId: string) {
   })
 }
 
-export async function getSession() {
+export const getSession = cache(async () => {
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE)?.value
   if (!token) return null
@@ -56,7 +57,7 @@ export async function getSession() {
   // Cookie expiry is a fixed 10-day upper bound. Server-side expiry slides on each authenticated request.
 
   return { profileId: data.profile_id, profile }
-}
+})
 
 export async function deleteSession() {
   const cookieStore = await cookies()

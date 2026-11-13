@@ -2,8 +2,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getSession } from '@/lib/session'
 
 export async function updateSession(request: NextRequest) {
-  // Public read-only sync endpoint: skip the session DB round-trips.
-  if (request.nextUrl.pathname === '/api/items') return NextResponse.next()
+  // Public pages and every mutation validate their own session. Avoid a second
+  // sequential database lookup before rendering home and item detail pages.
+  if (!request.nextUrl.pathname.startsWith('/admin')) return NextResponse.next()
 
   const session = await getSession()
   if (request.nextUrl.pathname.startsWith('/admin') && !session) {

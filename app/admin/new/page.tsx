@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import HomeButton from '@/components/HomeButton'
 import { redirect } from 'next/navigation'
 import { createTask } from './actions'
 import ImageUploader from './ImageUploader'
@@ -28,7 +29,7 @@ export default async function NewTaskPage({
   return (
     <main className="min-h-screen bg-linen px-5 py-10 text-ink sm:px-8 sm:py-14">
       <section className="mx-auto max-w-2xl">
-        <Link href="/" className="inline-flex h-11 items-center rounded-xl border border-oak/40 bg-white/60 px-4 text-sm font-medium text-ink/70 transition hover:bg-beige/50 hover:text-ink">← Trang chủ</Link>
+        <HomeButton />
         <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-rose">Nội dung lớp</p>
         <h1 className="mt-2 font-serif text-4xl">Tạo nội dung mới</h1>
         <p className="mt-3 text-sm text-ink/65">Nếu không chọn hạn, task hoặc bài tập sẽ tự nhận hạn 7 ngày từ lúc tạo.</p>
@@ -82,7 +83,7 @@ export default async function NewTaskPage({
             Công khai task ngay
           </label>
 
-          <Link href="/" className="inline-flex h-12 items-center rounded-xl border border-oak/40 px-5 text-sm font-medium hover:bg-beige/50">Hủy</Link>
+          <Link href="/" prefetch className="nav-button">Hủy</Link>
         </SaveTaskForm>
       </section>
     </main>
