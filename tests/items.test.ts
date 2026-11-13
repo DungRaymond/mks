@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { formatVietnamDeadline, parseVietnamDeadline } from '../lib/deadlines.ts'
 import { belongsToCollection, filterItems, splitSections, taskCollectionPatch, type Item } from '../lib/items.ts'
 
 const now = Date.parse('2026-11-13T09:00:00Z')
@@ -8,6 +9,24 @@ const makeItem = (overrides: Partial<Item> = {}): Item => ({
   subjects: ['Toán'], is_archived: false, priority: 'normal',
   due_at: '2026-11-14T09:00:00Z', is_done: false, updated_at: '2026-11-13T08:00:00Z',
   ...overrides,
+})
+
+test('deadline editor round-trips Vietnam wall time to UTC without timezone drift', () => {
+  const value = '2026-11-13T16:45'
+  const timestamp = parseVietnamDeadline(value)
+  assert.equal(timestamp, '2026-11-13T09:45:00.000Z')
+  assert.equal(formatVietnamDeadline(timestamp!), value)
+})
+
+test('deadline parser accepts optional seconds and clears an empty deadline', () => {
+  assert.equal(parseVietnamDeadline('2026-11-13T16:45:32'), '2026-11-13T09:45:32.000Z')
+  assert.equal(parseVietnamDeadline(''), null)
+})
+
+test('deadline parser rejects malformed and impossible local dates', () => {
+  for (const value of ['2026-02-30T10:00', '2026-13-01T10:00', '2026-01-01T24:00', '13/11/2026 10:00']) {
+    assert.equal(parseVietnamDeadline(value), undefined)
+  }
 })
 
 test('completed tasks and homework do not appear in actionable sections', () => {

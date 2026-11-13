@@ -6,6 +6,7 @@ import { getSession } from '@/lib/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { SUBJECT_NAMES } from '@/lib/subjects'
 import { itemHref } from '@/lib/item-slugs'
+import { parseVietnamDeadline } from '@/lib/deadlines'
 
 function validateTask(formData: FormData, id?: string) {
   const type = String(formData.get('type') ?? 'task')
@@ -28,7 +29,8 @@ function validateTask(formData: FormData, id?: string) {
   if (uniqueSubjects.length !== subjects.length || subjects.some((subject) => !SUBJECT_NAMES.includes(subject)) || !['normal', 'high', 'urgent'].includes(priority)) {
     return { error: 'fields' as const }
   }
-  if (dueAt && Number.isNaN(Date.parse(dueAt))) return { error: 'due' as const }
+  const parsedDueAt = parseVietnamDeadline(dueAt)
+  if (parsedDueAt === undefined) return { error: 'due' as const }
   if (!Array.isArray(imageIds) || imageIds.length > 10 || imageIds.some((id) => typeof id !== 'string' || !/^[0-9a-f-]{36}$/i.test(id))) {
     return { error: 'images' as const }
   }
@@ -41,7 +43,7 @@ function validateTask(formData: FormData, id?: string) {
       description: description || null,
       subjects: SUBJECT_NAMES.filter((subject) => uniqueSubjects.includes(subject)),
       priority,
-       due_at: ['notice', 'announcement'].includes(type) ? null : dueAt ? `${dueAt}:00+07:00` : null,
+        due_at: ['notice', 'announcement'].includes(type) ? null : parsedDueAt,
       is_published: published,
       images: imageIds.map((uuid: string, sort_order: number) => ({
         uc_uuid: uuid,

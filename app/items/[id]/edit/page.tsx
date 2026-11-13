@@ -8,6 +8,7 @@ import SaveTaskForm from '@/app/SaveTaskForm'
 import SubjectPicker from '@/app/SubjectPicker'
 import HomeButton from '@/components/HomeButton'
 import { findItemByRoute, itemHref, itemSlug, parseItemRoute } from '@/lib/item-slugs'
+import { formatVietnamDeadline } from '@/lib/deadlines'
 
 const errorText: Record<string, string> = {
   title: 'Nhập tiêu đề, tối đa 240 ký tự.',
@@ -49,7 +50,7 @@ export default async function EditItemPage({
     .order('sort_order')
   if (imagesError) throw new Error('Could not load item images')
   const action = updateTask.bind(null, id)
-  const dueValue = item.due_at ? new Date(item.due_at).toLocaleString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }).replace(' ', 'T').slice(0, 16) : ''
+  const dueValue = formatVietnamDeadline(item.due_at)
 
   return (
     <main className="min-h-screen bg-linen px-5 py-10 text-ink sm:px-8 sm:py-14">
